@@ -2,15 +2,15 @@ from aiogram import types
 
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-but1 = KeyboardButton('Контакты')
-but2 = KeyboardButton('Режим работы')
-but3 = KeyboardButton('Тренировки')
-but4 = KeyboardButton('Преподаватели')
+but1 = KeyboardButton('Помощь')
+but2 = KeyboardButton('Моя подписка')
+but3 = KeyboardButton('3')
+but4 = KeyboardButton('4')
 
 kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_client.add(but1).add(but2).insert(but3).add(but4)
 
-but1 = KeyboardButton('Супер')
+but1 = KeyboardButton('Купить подписку на месяц')
 
 kb_client_1 = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_client_1.add(but1)
@@ -27,3 +27,6 @@ keyboard.add(button1)
 keyboard.add(button2)
 keyboard.add(button3)
 keyboard.add(button4)
+
+
+

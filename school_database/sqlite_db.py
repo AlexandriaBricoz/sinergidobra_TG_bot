@@ -1,75 +1,83 @@
-import sqlite3 as sq
-from create_bot import bot
-from aiogram import types
+import asyncio
+import sqlite3
 
 
-def bot_tables_sql():
-    global base_sql
-    global cur
-    base_sql = sq.connect('bot_sql.db')
-    cur = base_sql.cursor()
+def create_table():
+    # Подключаемся к базе данных (файлу)
+    conn = sqlite3.connect('bot_sql.db')
+    cursor = conn.cursor()
 
-    if base_sql == True:
-        print('Database connected')
-    cur.execute("""CREATE TABLE IF NOT EXISTS courses(
-        title Text PRIMARY KEY, 
-        photo Text, 
-        description Text,                         
-        timetable Text, 
-        duration_of_lesson Text, 
-        price_of_lesson Text)""")
-
-    cur.execute("""CREATE TABLE IF NOT EXISTS teachers(
-        name Text PRIMARY KEY, 
-        photo Text,
-        description Text, 
-        courses Text)""")
-
-    base_sql.commit()
+    # Создаем таблицу subscriptions
+    cursor.execute('''CREATE TABLE IF NOT EXISTS users (
+                        id INTEGER PRIMARY KEY,
+                        user_id TEXT NOT NULL,
+                        username TEXT,
+                        full_name TEXT,
+                        start_date DATE NOT NULL,
+                        end_date DATE NOT NULL
+                      )''')
+    print(1)
+    # Сохраняем изменения и закрываем соединение
+    conn.commit()
+    conn.close()
 
 
-async def sql_add_commands_courses(state):
-    async with state.proxy() as data_course:
-        cur.execute('INSERT INTO courses VALUES (?, ?, ?, ?, ?, ?)',
-                    tuple(data_course.values()))
+def add_subscription(user_id, username, full_name, start_date, end_date):
+    try:
+        # Подключаемся к базе данных (файлу)
+        conn = sqlite3.connect('bot_sql.db')
+        cursor = conn.cursor()
 
-    base_sql.commit()
+        # SQL-запрос для вставки данных в таблицу subscriptions
+        insert_query = "INSERT INTO users (user_id, username, full_name, start_date, end_date) VALUES (?, ?, ?, ?, ?);"
 
+        # Выполняем запрос с данными пользователя и датами подписки
+        cursor.execute(insert_query, (user_id, username, full_name, start_date, end_date))
 
-async def sql_add_commands_teachers(state):
-    async with state.proxy() as data_teacher:
-        cur.execute('INSERT INTO teachers VALUES (?, ?, ?, ?)',
-                    tuple(data_teacher.values()))
+        # Подтверждаем изменения в базе данных
+        conn.commit()
 
-    base_sql.commit()
-
-
-async def sql_read_from_courses(message: types.Message):
-    for info_c in cur.execute('SELECT * FROM courses').fetchall():
-        await bot.send_photo(message.from_user.id, info_c[1],\
-            f'{info_c[0]}\nОписание: {info_c[2]}\n'\
-                f'Расписание: {info_c[3]}\nПродолжительность тренировки: {info_c[4]}\nСтоимость тренировки: {info_c[5]} рублей')
-
-
-async def sql_read_from_teachers(message: types.Message):
-    for info_t in cur.execute('SELECT * FROM teachers').fetchall():
-        await bot.send_photo(message.from_user.id, info_t[1], \
-            f'{info_t[0]}\nОписание: {info_t[2]}\nТренировки: {info_t[3]}')
+        print("Запись успешно добавлена в базу данных!")
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
+    finally:
+        # Закрываем соединение с базой данных
+        conn.close()
 
 
-async def choose_delete_courses():
-    return cur.execute('SELECT * FROM courses').fetchall()
+async def remove_expired_subscriptions():
+    while True:
+        # Ваш код удаления пользователей с истекшим сроком подписки
+        conn = sqlite3.connect('bot_sql.db')
+        cur = conn.cursor()
+        cur.execute("DELETE FROM users WHERE end_date < date('now')")
+        conn.commit()
+        conn.close()
+        # Пауза на один день перед следующей проверкой
+        await asyncio.sleep(3)  # 86400 секунд = 24 часа
 
 
-async def delete_course(data):
-    cur.execute('DELETE FROM courses WHERE title == ?', (data,))
-    base_sql.commit()
+def get_all_subscriptions():
+    try:
+        # Подключаемся к базе данных (файлу)
+        conn = sqlite3.connect('bot_sql.db')
+        cursor = conn.cursor()
 
+        # SQL-запрос для выборки всех строк из таблицы subscriptions
+        select_query = "SELECT * FROM users;"
 
-async def choose_delete_teachers():
-    return cur.execute('SELECT * FROM teachers').fetchall()
+        # Выполняем запрос
+        cursor.execute(select_query)
 
+        # Получаем все строки
+        rows = cursor.fetchall()
 
-async def delete_teacher(data):
-    cur.execute('DELETE FROM teachers WHERE name == ?', (data, ))
-    base_sql.commit()
+        # Формируем список в списке для всех строк
+        subscriptions_list = [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in rows]
+
+        return subscriptions_list
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
+    finally:
+        # Закрываем соединение с базой данных
+        conn.close()
