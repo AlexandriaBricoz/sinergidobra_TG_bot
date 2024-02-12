@@ -10,7 +10,7 @@ but4 = KeyboardButton('4')
 kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_client.add(but1).add(but2).insert(but3).add(but4)
 
-but1 = KeyboardButton('Купить подписку на месяц')
+but1 = KeyboardButton('Оплатить')
 
 kb_client_1 = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_client_1.add(but1)
@@ -29,4 +29,9 @@ keyboard.add(button3)
 keyboard.add(button4)
 
 
+back_keyboard = types.InlineKeyboardMarkup()
+back_button = types.InlineKeyboardButton(text="Назад", callback_data="button5")
+back_button_1 = types.InlineKeyboardButton(text="Купить подписку на месяц", callback_data="button6")
+# Добавляем кнопки на клавиатуру в виде списка
+back_keyboard.add(back_button).add(back_button_1)
 
