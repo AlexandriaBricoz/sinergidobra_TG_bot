@@ -97,7 +97,7 @@ async def set_tariff(message: types.Message, ):
                                datetime.datetime.now().date(),
                                datetime.datetime.now().date() + datetime.timedelta(days=31))
     await bot.send_message(message.from_user.id,
-                           f'Оплата прошла успешно',reply_markup=kb_client)
+                           f'Оплата прошла успешно', reply_markup=kb_client)
 
 
 @dp.message_handler(Text(equals='Моя подписка', ignore_case=True))
@@ -106,8 +106,15 @@ async def my_tariff(message: types.Message, ):
                            f'Ваша подписка действует до {sqlite_db.get_subscriptions_by_user_id(message.from_user.id)[0][5]}')
 
 
+@dp.message_handler(Text(equals='Тарифные планы', ignore_case=True))
+async def tariffs(message: types.Message, ):
+    await bot.send_message(message.from_user.id,
+                           f'🗓 Выберите свой тарифный план👇👋',
+                           reply_markup=keyboard)
+
 def handlers_register(dp: Dispatcher):
     dp.register_message_handler(start_bot, commands=['start', 'help'])
     dp.register_message_handler(get_contacts, Text(equals='Помощь', ignore_case=True))
     dp.register_message_handler(set_tariff, Text(equals='Оплатить', ignore_case=True))
     dp.register_message_handler(my_tariff, Text(equals='Моя подписка', ignore_case=True))
+    dp.register_message_handler(tariffs, Text(equals='Тарифные планы', ignore_case=True))
