@@ -81,3 +81,29 @@ def get_all_subscriptions():
     finally:
         # Закрываем соединение с базой данных
         conn.close()
+
+
+def get_subscriptions_by_user_id(user_id):
+    try:
+        # Подключаемся к базе данных (файлу)
+        conn = sqlite3.connect('bot_sql.db')
+        cursor = conn.cursor()
+
+        # SQL-запрос для выборки строк с определенным user_id
+        select_query = "SELECT * FROM users WHERE user_id = ?;"
+
+        # Выполняем запрос с указанным user_id
+        cursor.execute(select_query, (user_id,))
+
+        # Получаем все строки с этим user_id
+        rows = cursor.fetchall()
+
+        # Формируем список в списке для всех строк
+        subscriptions_list = [[row[0], row[1], row[2], row[3], row[4], row[5]] for row in rows]
+
+        return subscriptions_list
+    except Exception as e:
+        print(f"Произошла ошибка: {e}")
+    finally:
+        # Закрываем соединение с базой данных
+        conn.close()

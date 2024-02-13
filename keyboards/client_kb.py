@@ -4,11 +4,10 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 but1 = KeyboardButton('Помощь')
 but2 = KeyboardButton('Моя подписка')
-but3 = KeyboardButton('3')
-but4 = KeyboardButton('4')
+but3 = KeyboardButton('Тарифные планы')
 
 kb_client = ReplyKeyboardMarkup(resize_keyboard=True)
-kb_client.add(but1).add(but2).insert(but3).add(but4)
+kb_client.add(but1).add(but2).insert(but3)
 
 but1 = KeyboardButton('Оплатить')
 
@@ -27,10 +26,12 @@ keyboard.add(button2)
 keyboard.add(button3)
 
 #######################################################################################################
+back_keyboard_0 = types.InlineKeyboardMarkup()
+back_button = types.InlineKeyboardButton(text="Назад", callback_data="tariff_0")
+back_keyboard_0.add(back_button)
 
 back_keyboard_1 = types.InlineKeyboardMarkup()
-back_button = types.InlineKeyboardButton(text="Назад", callback_data="tariff_0")
-back_button_1 = types.InlineKeyboardButton(text="Купить подписку на месяц_1", callback_data="tariff__1_1")
+back_button_1 = types.InlineKeyboardButton(text="Познакомиться с курсом", callback_data="tariff_1_1")
 # Добавляем кнопки на клавиатуру в виде списка
 back_keyboard_1.add(back_button).add(back_button_1)
 
