@@ -36,12 +36,28 @@ back_button_1 = types.InlineKeyboardButton(text="Познакомиться с �
 back_keyboard_1.add(back_button).add(back_button_1)
 
 back_keyboard_2 = types.InlineKeyboardMarkup()
-back_button_2_1 = types.InlineKeyboardButton(text="Купить подписку на месяц_2", callback_data="tariff_2_1")
+back_button_2_1 = types.InlineKeyboardButton(text="Купить курс за 1490", callback_data="tariff_2_1")
 # Добавляем кнопки на клавиатуру в виде списка
 back_keyboard_2.add(back_button).add(back_button_2_1)
 
 back_keyboard_3 = types.InlineKeyboardMarkup()
-back_button_3_1 = types.InlineKeyboardButton(text="Купить подписку на месяц_3_1", callback_data="tariff_3_1")
-back_button_3_2 = types.InlineKeyboardButton(text="Купить подписку на месяц_3_2", callback_data="tariff_3_2")
+back_button_3_1 = types.InlineKeyboardButton(text="Оплатить онлайн клуб на месяц 2800₽", callback_data="tariff_3_1")
+back_button_3_2 = types.InlineKeyboardButton(text="Вступить в офлайн клуб", callback_data="tariff_3_2")
 # Добавляем кнопки на клавиатуру в виде списка
 back_keyboard_3.add(back_button).add(back_button_3_1).add(back_button_3_2)
+
+pay_2 = types.InlineKeyboardMarkup()
+pay_button_2 = types.InlineKeyboardButton(text="Оплатить 1490₽", callback_data="tariff_3_2_1")
+# Добавляем кнопки на клавиатуру в виде списка
+pay_2.add(pay_button_2)
+
+
+pay_3_1 = types.InlineKeyboardMarkup()
+pay_button_3_1 = types.InlineKeyboardButton(text="Оплатить", callback_data="tariff_3_1_1")
+# Добавляем кнопки на клавиатуру в виде списка
+pay_3_1.add(pay_button_3_1)
+
+pay_3_2 = types.InlineKeyboardMarkup()
+pay_button_3_2 = types.InlineKeyboardButton(text="Получить контакты", callback_data="tariff_3_2_1")
+# Добавляем кнопки на клавиатуру в виде списка
+pay_3_2.add(pay_button_3_2)

@@ -5,7 +5,6 @@ from aiogram.dispatcher.filters.state import State, StatesGroup
 from create_bot import bot, master_id
 from keyboards.manage_kb import kb_manage_3
 from school_database import sqlite_db
-from school_database.sqlite_db import remove_expired_subscriptions
 
 """Администрирование Бота через FSM
 Внесение изменений в базу через интерфейс Telegram
@@ -45,6 +44,7 @@ async def verify_owner(message: types.Message):
     if id_check == ID_MASTER:
         await bot.send_message(message.from_user.id, 'Готов к работе, пожалуйста выбери команды на клавиатуре',
                                reply_markup=kb_manage_3)
+        await remove_expired_subscriptions()
     else:
         await bot.send_message(message.from_user.id, 'Доступ запрещен')
     await message.delete()

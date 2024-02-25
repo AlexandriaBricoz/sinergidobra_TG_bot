@@ -1,9 +1,9 @@
 from aiogram.utils import executor
 
+import handlers.client
 from create_bot import dp
 from handlers import client, manage, common
 from school_database import sqlite_db
-from school_database.sqlite_db import remove_expired_subscriptions
 
 
 async def on_startup(_):
@@ -11,6 +11,7 @@ async def on_startup(_):
 
 
 sqlite_db.create_table()
+handlers.client.start()
 client.handlers_register(dp)
 manage.handlers_register_manage(dp)
 common.register_common_handlers(dp)

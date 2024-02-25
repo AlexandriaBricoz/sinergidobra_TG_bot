@@ -1,4 +1,3 @@
-import asyncio
 import sqlite3
 
 
@@ -43,18 +42,6 @@ def add_subscription(user_id, username, full_name, start_date, end_date):
     finally:
         # Закрываем соединение с базой данных
         conn.close()
-
-
-async def remove_expired_subscriptions():
-    while True:
-        # Ваш код удаления пользователей с истекшим сроком подписки
-        conn = sqlite3.connect('bot_sql.db')
-        cur = conn.cursor()
-        cur.execute("DELETE FROM users WHERE end_date < date('now')")
-        conn.commit()
-        conn.close()
-        # Пауза на один день перед следующей проверкой
-        await asyncio.sleep(3)  # 86400 секунд = 24 часа
 
 
 def get_all_subscriptions():
