@@ -1,8 +1,6 @@
 import asyncio
-from datetime import datetime, date
 import sqlite3
-
-# import sqlite3
+from datetime import datetime, date
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
@@ -16,9 +14,9 @@ from school_database.sqlite_db import get_all_subscriptions
 
 """Хендлеры для взаимодействия с клиентом
 
-    -1002030571529
+    group_id:-1002030571529
     
-    1085385124
+    Иван Неретин 1085385124
 """
 
 
@@ -31,15 +29,28 @@ def start():
 
 async def remove_expired_subscriptions():
     while True:
-
         # Ваш код удаления пользователей с истекшим сроком подписки
         conn = sqlite3.connect('bot_sql.db')
         cur = conn.cursor()
+        cur.execute("SELECT user_id FROM users WHERE end_date < date('now')")
+        expired_users = cur.fetchall()  # Получаем список пользователей с истекшим сроком подписки
         cur.execute("DELETE FROM users WHERE end_date < date('now')")
         conn.commit()
         conn.close()
+
+        # Удаление пользователей из группы
+        for user_id in expired_users:
+            try:
+                # Указываете идентификатор группы, из которой нужно удалить пользователя
+                group_id = -1002030571529
+                await bot.restrict_chat_member(group_id, user_id, ChatPermissions(can_send_messages=False))
+                await bot.kick_chat_member(group_id, user_id)
+                print(f"Пользователь {user_id} исключен из группы.")
+            except Exception as e:
+                print(f"Ошибка при удалении пользователя из группы: {e}")
+
         # Пауза на один день перед следующей проверкой
-        await asyncio.sleep(3)  # 86400 секунд = 24 часа
+        await asyncio.sleep(86400)  # 86400 секунд = 24 часа
 
 
 async def remind_subscriptions():
@@ -57,11 +68,11 @@ async def remind_subscriptions():
                 id, user_id, username, full_name, start_date, end_date = subscription
 
                 # Проверяем, сколько дней осталось до окончания подписки
-                days_left = ( datetime.strptime(end_date, '%Y-%m-%d').date() - current_date).days
+                days_left = (datetime.strptime(end_date, '%Y-%m-%d').date() - current_date).days
 
                 # Если остался ровно один день до окончания подписки, отправляем уведомление
                 if days_left == 1:
-                    message = f"Уважаемый {full_name}!\nВаша подписка закончится завтра. Пожалуйста, продлите её."
+                    message = f"{full_name}!Ваша подписка закончится завтра. Пожалуйста, продлите её!"
                     await bot.send_message(user_id, message)
 
         except Exception as e:
@@ -159,8 +170,8 @@ async def process_callback(callback_query: types.CallbackQuery):
         await callback_query.message.reply(
             f'🗓 Выберите свой тарифный план👇👋',
             reply_markup=keyboard)
-    # else:
-    #     await callback_query.message.reply("Произошла ошибка. Пожалуйста, попробуйте еще раз.")
+    # else:о
+    #     await callback_query.message.reply("Произошла ошибка. Пжалуйста, попробуйте еще раз.")
 
 
 @dp.message_handler(Text(equals='Помощь', ignore_case=True))

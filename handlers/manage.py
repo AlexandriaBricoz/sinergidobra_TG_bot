@@ -3,6 +3,7 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from create_bot import bot, master_id
+from handlers.client import remove_expired_subscriptions
 from keyboards.manage_kb import kb_manage_3
 from school_database import sqlite_db
 
