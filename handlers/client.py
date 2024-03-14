@@ -151,7 +151,7 @@ def create_pay_button(message: types.Message, amount, description):
                         message.from_user.full_name, pay.description, amount)
     keyboard.add(button)
     confirm_keyboard = types.InlineKeyboardMarkup()
-    confirm_button = types.InlineKeyboardButton(text='Проверить', callback_data=f"order {pay.id}")
+    confirm_button = types.InlineKeyboardButton(text='Проверить', callback_data=f"order {pay.id} {pay.description}")
     # Добавляем кнопки на клавиатуру в виде списка
     confirm_keyboard.add(confirm_button)
     return keyboard, confirm_keyboard
@@ -166,13 +166,13 @@ async def process_callback(callback_query: types.CallbackQuery):
                                            reply_markup=back_keyboard_1)
     elif data == "tariff_2":
         keybourd, confirm_keybourd = create_pay_button(callback_query, 1.00,
-                                                       "Купить курс за 1490")
+                                                       "Курс за 1490₽")
         await callback_query.message.reply("Курс для новичков - 4 практики на основные направления "
                                            "подвижности с подробными инструкциями и отстройками.",
                                            reply_markup=keybourd)
         await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keybourd)
     elif data == "tariff_3":
-        keybourd, confirm_keybourd = create_pay_button(callback_query, 2.00, "Оплатить онлайн клуб на месяц 2800₽")
+        keybourd, confirm_keybourd = create_pay_button(callback_query, 2.00, "Онлайн клуб на месяц 2800₽")
         await callback_query.message.reply("Клуб - это возможность участвовать в онлайн-тренировках "
                                            "и получать доступ к записям занятий.",
                                            reply_markup=keybourd)
@@ -202,16 +202,27 @@ async def process_callback(callback_query: types.CallbackQuery):
     await callback_query.answer()
 
     data = callback_query.data
-    if payment.check_payment_status(data[6:]):
-        orders = Orders()
-        orders.confirm_order(data[6:])
-        sqlite_db.add_subscription(str(callback_query.from_user.id), str(callback_query.from_user.username),
-                                   str(callback_query.from_user.full_name),
-                                   datetime.now().date(),
-                                   datetime.now().date() + timedelta(days=31))
-        await callback_query.message.reply("Оплата прошла УСПЕШНО")
-    else:
-        await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
+    if data[-5:] == '2800₽':
+        print(data[6:][:-26])
+        if payment.check_payment_status(data[6:][:-26]):
+            orders = Orders()
+            orders.confirm_order(data[6:][-14:])
+            sqlite_db.add_subscription(str(callback_query.from_user.id), str(callback_query.from_user.username),
+                                       str(callback_query.from_user.full_name),
+                                       datetime.now().date(),
+                                       datetime.now().date() + timedelta(days=31))
+            await callback_query.message.reply("Оплата прошла УСПЕШНО")
+        else:
+            await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
+    elif data[-5:] == '1490₽':
+        print(data[6:][:-14])
+        if payment.check_payment_status(data[6:][:-14]):
+            orders = Orders()
+            orders.confirm_order(data[6:][-27:])
+            await callback_query.message.reply("Оплата прошла УСПЕШНО")
+            await course_for_beginners(callback_query)
+        else:
+            await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
 
 
 @dp.message_handler(Text(equals='Помощь', ignore_case=True))
@@ -237,16 +248,6 @@ async def course_for_beginners(message: types.Message):
                                                  f'Не забывайте, что занимаясь по видео, вы всегда можете поставить запись на паузу, '
                                                  f'чтобы уделить большее внимание отдельным упражнениям, прислушивайтесь к себе и будьте осознанны в своей практике.\n'
                                                  f'Впоследствие буду рада обратной связи 🌷')
-
-
-@dp.message_handler(Text(equals='Оплатить', ignore_case=True))
-async def set_tariff(message: types.Message, ):
-    sqlite_db.add_subscription(str(message.from_user.id), str(message.from_user.username),
-                               str(message.from_user.full_name),
-                               datetime.datetime.now().date(),
-                               datetime.datetime.now().date() + datetime.timedelta(days=31))
-    await bot.send_message(message.from_user.id,
-                           f'Оплата прошла успешно', reply_markup=kb_client)
 
 
 @dp.message_handler(Text(equals='Моя подписка', ignore_case=True))
@@ -285,6 +286,5 @@ async def kick_user(message: types.Message):
 def handlers_register(dp: Dispatcher):
     dp.register_message_handler(start_bot, commands=['start', 'help'])
     dp.register_message_handler(get_contacts, Text(equals='Помощь', ignore_case=True))
-    dp.register_message_handler(set_tariff, Text(equals='Оплатить', ignore_case=True))
     dp.register_message_handler(my_tariff, Text(equals='Моя подписка', ignore_case=True))
     dp.register_message_handler(tariffs, Text(equals='Тарифные планы', ignore_case=True))
