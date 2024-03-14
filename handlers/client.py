@@ -1,14 +1,15 @@
 import asyncio
 import sqlite3
-from datetime import datetime, date
+from datetime import datetime, date, timedelta
 
 from aiogram import types, Dispatcher
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ChatPermissions
 
+import payment
 from create_bot import bot, bot_address, dp
-from keyboards.client_kb import keyboard, kb_client, back_keyboard_1, back_keyboard_3, \
-    back_keyboard_0, pay_3_1, pay_3_2, pay_2
+from keyboards.client_kb import keyboard, kb_client, back_keyboard_1, back_keyboard_0, pay_3_1, pay_3_2, pay_2
+from order_DB import Orders
 from school_database import sqlite_db
 from school_database.sqlite_db import get_all_subscriptions
 
@@ -138,22 +139,44 @@ async def start_bot(message: types.Message):
     # await message.reply(f'Пожалуйста напишите боту в ЛС: {bot_home}')
 
 
+def create_pay_button(message: types.Message, amount, description):
+    pay = payment.create_payment(full_name=message.from_user.full_name, amount=amount, description=description)
+    keyboard = types.InlineKeyboardMarkup()
+    button = types.InlineKeyboardButton(text=description, callback_data="tariff_3_1",
+                                        url=pay.confirmation.confirmation_url)
+    print(pay.id)
+    # Добавляем кнопки на клавиатуру в виде списка
+    orders = Orders()
+    orders.create_order(pay.id, message.from_user.id, message.from_user.username,
+                        message.from_user.full_name, pay.description, amount)
+    keyboard.add(button)
+    confirm_keyboard = types.InlineKeyboardMarkup()
+    confirm_button = types.InlineKeyboardButton(text='Проверить', callback_data=f"order {pay.id}")
+    # Добавляем кнопки на клавиатуру в виде списка
+    confirm_keyboard.add(confirm_button)
+    return keyboard, confirm_keyboard
+
+
 @dp.callback_query_handler(lambda c: c.data.startswith('tariff'))
 async def process_callback(callback_query: types.CallbackQuery):
     await callback_query.answer()
     data = callback_query.data
     if data == "tariff_1":
-
         await callback_query.message.reply("Бесплатный урок - попробуйте мой стиль ведения занятий.",
                                            reply_markup=back_keyboard_1)
     elif data == "tariff_2":
+        keybourd, confirm_keybourd = create_pay_button(callback_query, 1.00,
+                                                       "Купить курс за 1490")
         await callback_query.message.reply("Курс для новичков - 4 практики на основные направления "
                                            "подвижности с подробными инструкциями и отстройками.",
-                                           reply_markup=pay_2)
+                                           reply_markup=keybourd)
+        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keybourd)
     elif data == "tariff_3":
+        keybourd, confirm_keybourd = create_pay_button(callback_query, 2.00, "Оплатить онлайн клуб на месяц 2800₽")
         await callback_query.message.reply("Клуб - это возможность участвовать в онлайн-тренировках "
                                            "и получать доступ к записям занятий.",
-                                           reply_markup=back_keyboard_3)
+                                           reply_markup=keybourd)
+        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keybourd)
     if data == "tariff_1_1":
         await callback_query.message.reply("https://www.youtube.com/watch?v=Q8axQa1QSCI",
                                            reply_markup=back_keyboard_0)
@@ -172,6 +195,23 @@ async def process_callback(callback_query: types.CallbackQuery):
             reply_markup=keyboard)
     # else:о
     #     await callback_query.message.reply("Произошла ошибка. Пжалуйста, попробуйте еще раз.")
+
+
+@dp.callback_query_handler(lambda c: c.data.startswith('order'))
+async def process_callback(callback_query: types.CallbackQuery):
+    await callback_query.answer()
+
+    data = callback_query.data
+    if payment.check_payment_status(data[6:]):
+        orders = Orders()
+        orders.confirm_order(data[6:])
+        sqlite_db.add_subscription(str(callback_query.from_user.id), str(callback_query.from_user.username),
+                                   str(callback_query.from_user.full_name),
+                                   datetime.now().date(),
+                                   datetime.now().date() + timedelta(days=31))
+        await callback_query.message.reply("Оплата прошла УСПЕШНО")
+    else:
+        await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
 
 
 @dp.message_handler(Text(equals='Помощь', ignore_case=True))
