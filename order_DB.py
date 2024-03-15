@@ -37,6 +37,15 @@ class Orders:
         self.conn.commit()
         return self.cursor.lastrowid
 
+    def check_order_payment(self, order_id):
+        self.cursor.execute("SELECT status FROM orders WHERE order_id = ?", (order_id,))
+        order_status = self.cursor.fetchone()
+
+        if order_status[0] == "confirmed":
+            return True
+        else:
+            return False
+
     # Функция для получения заказов одного пользователя
     def get_user_orders(self, user_id):
         self.cursor.execute("SELECT * FROM orders WHERE user_id = ?", (user_id,))
@@ -59,6 +68,7 @@ class Orders:
 
     # Функция для подтверждения заказа по его ID
     def confirm_order(self, order_id):
+        print('conf ',order_id)
         confirmation_date = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         self.cursor.execute('''UPDATE orders SET confirmation_date = ?, status = ? WHERE order_id = ?''',
                             (confirmation_date, 'confirmed', order_id))
@@ -69,11 +79,11 @@ class Orders:
         return self.cursor.fetchall()
 
 
-orders = Orders()
+# orders = Orders()
 
 # orders.create_order('wwedwerceed322', 122133, '@example_user', 'John Doe', 'ART123', 100.0)
 # print(orders.get_all_orders())
-print(orders.get_unconfirmed_orders())
+# print(orders.get_unconfirmed_orders())
 
 # # Пример использования функций
 # order_id = orders.create_order(122133, '@example_user', 'John Doe', 'ART123', 100.0, 110.0,

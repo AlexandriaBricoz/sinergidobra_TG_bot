@@ -29,6 +29,7 @@ def start():
 
 
 async def remove_expired_subscriptions():
+    print('Запущен сервис для удаления пользователей')
     while True:
         # Ваш код удаления пользователей с истекшим сроком подписки
         conn = sqlite3.connect('bot_sql.db')
@@ -55,7 +56,7 @@ async def remove_expired_subscriptions():
 
 
 async def remind_subscriptions():
-    print(1)
+    print('Напоминая запущены')
     while True:
         try:
             # Получаем список подписок из базы данных
@@ -149,12 +150,11 @@ def create_pay_button(message: types.Message, amount, description):
     orders = Orders()
     orders.create_order(pay.id, message.from_user.id, message.from_user.username,
                         message.from_user.full_name, pay.description, amount)
-    keyboard.add(button)
-    confirm_keyboard = types.InlineKeyboardMarkup()
+
     confirm_button = types.InlineKeyboardButton(text='Проверить', callback_data=f"order {pay.id} {description}")
     # Добавляем кнопки на клавиатуру в виде списка
-    confirm_keyboard.add(confirm_button)
-    return keyboard, confirm_keyboard
+    keyboard.add(button).add(confirm_button)
+    return keyboard
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('tariff'))
@@ -165,19 +165,17 @@ async def process_callback(callback_query: types.CallbackQuery):
         await callback_query.message.reply("Бесплатный урок - попробуйте мой стиль ведения занятий.",
                                            reply_markup=back_keyboard_1)
     elif data == "tariff_2":
-        keyboard, confirm_keyboard = create_pay_button(callback_query, 1.00,
-                                                       "1490₽")
+        keyboard = create_pay_button(callback_query, 1.00,
+                                     "1490₽")
         await callback_query.message.reply("Курс для новичков - 4 практики на основные направления "
                                            "подвижности с подробными инструкциями и отстройками.",
                                            reply_markup=keyboard)
-        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keyboard)
     elif data == "tariff_3":
-        keyboard, confirm_keyboard = create_pay_button(callback_query, 1.00,
-                                                       "2800₽")
+        keyboard = create_pay_button(callback_query, 1.00,
+                                     "2800₽")
         await callback_query.message.reply("Клуб - это возможность участвовать в онлайн-тренировках "
                                            "и получать доступ к записям занятий.",
                                            reply_markup=keyboard)
-        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keyboard)
     if data == "tariff_1_1":
         await callback_query.message.reply("https://www.youtube.com/watch?v=Q8axQa1QSCI",
                                            reply_markup=back_keyboard_0)
@@ -194,20 +192,18 @@ async def process_callback(callback_query: types.CallbackQuery):
         await callback_query.message.reply(
             f'🗓 Выберите свой тарифный план👇👋',
             reply_markup=keyboard)
-    # else:о
-    #     await callback_query.message.reply("Произошла ошибка. Пжалуйста, попробуйте еще раз.")
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('order'))
 async def process_callback(callback_query: types.CallbackQuery):
     await callback_query.answer()
-
     data = callback_query.data
     if data[-5:] == '2800₽':
-        print(data[6:][:-6])
-        if payment.check_payment_status(data[6:][:-6]):
-            orders = Orders()
-            orders.confirm_order(data[6:][-14:])
+        print('2800 ',data[6:][:-6])
+        orders = Orders()
+        if payment.check_payment_status(data[6:][:-6]) and not orders.check_order_payment(data[6:][:-6]):
+
+            orders.confirm_order(data[6:][:-6])
             sqlite_db.add_subscription(str(callback_query.from_user.id), str(callback_query.from_user.username),
                                        str(callback_query.from_user.full_name),
                                        datetime.now().date(),
@@ -216,10 +212,10 @@ async def process_callback(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
     elif data[-5:] == '1490₽':
-        print(data[6:][:-6])
-        if payment.check_payment_status(data[6:][:-6]):
-            orders = Orders()
-            orders.confirm_order(data[6:][-27:])
+        print('1490 ',data[6:][:-6])
+        orders = Orders()
+        if payment.check_payment_status(data[6:][:-6]) and not orders.check_order_payment(data[6:][:-6]):
+            orders.confirm_order(data[6:][:-6])
             await callback_query.message.reply("Оплата прошла УСПЕШНО")
             await course_for_beginners(callback_query)
         else:

@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime, timedelta
 
 
 def create_table():
@@ -15,7 +16,6 @@ def create_table():
                         start_date DATE NOT NULL,
                         end_date DATE NOT NULL
                       )''')
-    print(1)
     # Сохраняем изменения и закрываем соединение
     conn.commit()
     conn.close()
@@ -27,18 +27,29 @@ def add_subscription(user_id, username, full_name, start_date, end_date):
         conn = sqlite3.connect('bot_sql.db')
         cursor = conn.cursor()
 
-        # SQL-запрос для вставки данных в таблицу subscriptions
-        insert_query = "INSERT INTO users (user_id, username, full_name, start_date, end_date) VALUES (?, ?, ?, ?, ?);"
+        # Проверяем, есть ли активная подписка для данного пользователя
+        cursor.execute("SELECT * FROM users WHERE user_id = ?", (user_id,))
+        existing_subscription = cursor.fetchone()
 
-        # Выполняем запрос с данными пользователя и датами подписки
-        cursor.execute(insert_query, (user_id, username, full_name, start_date, end_date))
+        if existing_subscription:
+            # Если подписка существует, обновляем дату окончания
+            _, _, _, _, current_start_date, current_end_date = existing_subscription
+            new_end_date = datetime.strptime(current_end_date, "%Y-%m-%d") + timedelta(days=31)
+            update_query = "UPDATE users SET end_date = ? WHERE user_id = ?"
+            cursor.execute(update_query, (new_end_date.date(), user_id))
+            print("Существующая подписка успешно продлена!")
+        else:
+            # Если подписка не существует, добавляем новую запись
+            insert_query = "INSERT INTO users (user_id, username, full_name, start_date, end_date) VALUES (?, ?, ?, ?, ?);"
+            cursor.execute(insert_query, (user_id, username, full_name, start_date, end_date))
+            print("Новая подписка успешно добавлена в базу данных!")
 
         # Подтверждаем изменения в базе данных
         conn.commit()
 
-        print("Запись успешно добавлена в базу данных!")
     except Exception as e:
         print(f"Произошла ошибка: {e}")
+
     finally:
         # Закрываем соединение с базой данных
         conn.close()
