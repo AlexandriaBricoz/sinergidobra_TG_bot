@@ -142,7 +142,7 @@ async def start_bot(message: types.Message):
 def create_pay_button(message: types.Message, amount, description):
     pay = payment.create_payment(full_name=message.from_user.full_name, amount=amount, description=description)
     keyboard = types.InlineKeyboardMarkup()
-    button = types.InlineKeyboardButton(text=description, callback_data="tariff_3_1",
+    button = types.InlineKeyboardButton(text=description,
                                         url=pay.confirmation.confirmation_url)
     print(pay.id)
     # Добавляем кнопки на клавиатуру в виде списка
@@ -151,7 +151,7 @@ def create_pay_button(message: types.Message, amount, description):
                         message.from_user.full_name, pay.description, amount)
     keyboard.add(button)
     confirm_keyboard = types.InlineKeyboardMarkup()
-    confirm_button = types.InlineKeyboardButton(text='Проверить', callback_data=f"order {pay.id} {pay.description}")
+    confirm_button = types.InlineKeyboardButton(text='Проверить', callback_data=f"order {pay.id} {description}")
     # Добавляем кнопки на клавиатуру в виде списка
     confirm_keyboard.add(confirm_button)
     return keyboard, confirm_keyboard
@@ -165,18 +165,19 @@ async def process_callback(callback_query: types.CallbackQuery):
         await callback_query.message.reply("Бесплатный урок - попробуйте мой стиль ведения занятий.",
                                            reply_markup=back_keyboard_1)
     elif data == "tariff_2":
-        keybourd, confirm_keybourd = create_pay_button(callback_query, 1.00,
-                                                       "Курс за 1490₽")
+        keyboard, confirm_keyboard = create_pay_button(callback_query, 1.00,
+                                                       "1490₽")
         await callback_query.message.reply("Курс для новичков - 4 практики на основные направления "
                                            "подвижности с подробными инструкциями и отстройками.",
-                                           reply_markup=keybourd)
-        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keybourd)
+                                           reply_markup=keyboard)
+        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keyboard)
     elif data == "tariff_3":
-        keybourd, confirm_keybourd = create_pay_button(callback_query, 2.00, "Онлайн клуб на месяц 2800₽")
+        keyboard, confirm_keyboard = create_pay_button(callback_query, 1.00,
+                                                       "2800₽")
         await callback_query.message.reply("Клуб - это возможность участвовать в онлайн-тренировках "
                                            "и получать доступ к записям занятий.",
-                                           reply_markup=keybourd)
-        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keybourd)
+                                           reply_markup=keyboard)
+        await callback_query.message.reply("Отличный выбор", reply_markup=confirm_keyboard)
     if data == "tariff_1_1":
         await callback_query.message.reply("https://www.youtube.com/watch?v=Q8axQa1QSCI",
                                            reply_markup=back_keyboard_0)
@@ -203,8 +204,8 @@ async def process_callback(callback_query: types.CallbackQuery):
 
     data = callback_query.data
     if data[-5:] == '2800₽':
-        print(data[6:][:-26])
-        if payment.check_payment_status(data[6:][:-26]):
+        print(data[6:][:-6])
+        if payment.check_payment_status(data[6:][:-6]):
             orders = Orders()
             orders.confirm_order(data[6:][-14:])
             sqlite_db.add_subscription(str(callback_query.from_user.id), str(callback_query.from_user.username),
@@ -215,8 +216,8 @@ async def process_callback(callback_query: types.CallbackQuery):
         else:
             await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
     elif data[-5:] == '1490₽':
-        print(data[6:][:-14])
-        if payment.check_payment_status(data[6:][:-14]):
+        print(data[6:][:-6])
+        if payment.check_payment_status(data[6:][:-6]):
             orders = Orders()
             orders.confirm_order(data[6:][-27:])
             await callback_query.message.reply("Оплата прошла УСПЕШНО")
