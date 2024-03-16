@@ -36,7 +36,7 @@ def add_subscription(user_id, username, full_name, start_date, end_date):
         if existing_subscription:
             # Если подписка существует, обновляем дату окончания
             _, _, _, _, current_start_date, current_end_date = existing_subscription
-            new_end_date = datetime.strptime(current_end_date, "%Y-%m-%d") + timedelta(days=31)
+            new_end_date = datetime.strptime(current_end_date, "%Y-%m-%d") + timedelta(days=30)
             update_query = "UPDATE users SET end_date = ? WHERE user_id = ?"
             cursor.execute(update_query, (new_end_date.date(), user_id))
             print("Существующая подписка успешно продлена!")

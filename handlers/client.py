@@ -174,18 +174,20 @@ async def process_callback(callback_query: types.CallbackQuery):
         await callback_query.message.reply("Бесплатный урок - попробуйте мой стиль ведения занятий.",
                                            reply_markup=back_keyboard_1)
     elif data == "tariff_2":
-        keyboard = create_pay_button(callback_query, 1.00,
+        keyboard = create_pay_button(callback_query, 1490.00,
                                      "1490₽")
         await callback_query.message.reply("Курс для новичков - 4 практики на основные направления "
                                            "подвижности с подробными инструкциями и отстройками. \n\n"
-                                           "После оплаты нажмите \"Проверить\", после бот пришлёт вам курс.",
+                                           "После оплаты нажмите \"Проверить\", после бот пришлёт вам"
+                                           " телеграмм канал с курсом.",
                                            reply_markup=keyboard)
     elif data == "tariff_3":
-        keyboard = create_pay_button(callback_query, 1.00,
+        keyboard = create_pay_button(callback_query, 2800.00,
                                      "2800₽")
         await callback_query.message.reply("Клуб - это возможность участвовать в онлайн-тренировках "
                                            "и получать доступ к записям занятий. \n\n"
-                                           "После оплаты нажмите \"Проверить\", после бот подключит вам подписку.",
+                                           "После оплаты нажмите \"Проверить\", после бот подключит вам подписку "
+                                           "и пришлёт ссылку на телеграмм канал.",
                                            reply_markup=keyboard)
     if data == "tariff_1_1":
         await callback_query.message.reply("https://t.me/+4cSYv_mpEx01ODY6",
@@ -210,8 +212,8 @@ async def process_callback(callback_query: types.CallbackQuery):
             sqlite_db.add_subscription(str(callback_query.from_user.id), str(callback_query.from_user.username),
                                        str(callback_query.from_user.full_name),
                                        datetime.now().date(),
-                                       datetime.now().date() + timedelta(days=31))
-            await callback_query.message.reply("Оплата прошла УСПЕШНО")
+                                       datetime.now().date() + timedelta(days=30))
+            await callback_query.message.reply("Оплата прошла УСПЕШНО\n\nhttps://t.me/+nKZyOeZtDhowMDFi")
             print('Подтверждён платёж для ', callback_query.from_user.id, callback_query.from_user.full_name,
                   callback_query.from_user.username,
                   data[6:][:-6],
@@ -226,8 +228,7 @@ async def process_callback(callback_query: types.CallbackQuery):
         orders = Orders()
         if payment.check_payment_status(data[6:][:-6]) and not orders.check_order_payment(data[6:][:-6]):
             orders.confirm_order(data[6:][:-6])
-            await callback_query.message.reply("Оплата прошла УСПЕШНО")
-            await course_for_beginners(callback_query)
+            await callback_query.message.reply("Оплата прошла УСПЕШНО\n\nhttps://t.me/+BSFvAFBeB0Y3NmYy")
             print('Подтверждён платёж для ', callback_query.from_user.id, callback_query.from_user.full_name,
                   callback_query.from_user.username,
                   data[6:][:-6],
