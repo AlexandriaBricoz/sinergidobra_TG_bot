@@ -14,7 +14,7 @@ with open('config.json', 'r') as file:
     config_data = json.load(file)
 
 
-master_id = config_data['master_id_owner']
+masters_id = [int(config_data['master']),int(config_data['owner'])]
 bot_address = config_data['bot_name']
 bot = Bot(token=config_data["Token"])
 dp = Dispatcher(bot, storage=storage)

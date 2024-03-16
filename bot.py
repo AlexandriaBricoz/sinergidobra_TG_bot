@@ -3,11 +3,13 @@ from aiogram.utils import executor
 import handlers.client
 from create_bot import dp
 from handlers import client, manage, common
+from loging import printl
 from school_database import sqlite_db
 
 
 async def on_startup(_):
     print('Бот успешно вышел в Телеграм')
+    printl('Бот успешно вышел в Телеграм')
 
 
 sqlite_db.create_table()

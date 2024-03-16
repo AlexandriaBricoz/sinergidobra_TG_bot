@@ -1,6 +1,8 @@
 import sqlite3
 from datetime import datetime, timedelta
 
+from loging import printl
+
 
 def create_table():
     # Подключаемся к базе данных (файлу)
@@ -38,17 +40,20 @@ def add_subscription(user_id, username, full_name, start_date, end_date):
             update_query = "UPDATE users SET end_date = ? WHERE user_id = ?"
             cursor.execute(update_query, (new_end_date.date(), user_id))
             print("Существующая подписка успешно продлена!")
+            printl("Существующая подписка успешно продлена!")
         else:
             # Если подписка не существует, добавляем новую запись
             insert_query = "INSERT INTO users (user_id, username, full_name, start_date, end_date) VALUES (?, ?, ?, ?, ?);"
             cursor.execute(insert_query, (user_id, username, full_name, start_date, end_date))
             print("Новая подписка успешно добавлена в базу данных!")
+            printl("Новая подписка успешно добавлена в базу данных!")
 
         # Подтверждаем изменения в базе данных
         conn.commit()
 
     except Exception as e:
         print(f"Произошла ошибка: {e}")
+        printl(f"Произошла ошибка: {e}")
 
     finally:
         # Закрываем соединение с базой данных
@@ -76,6 +81,7 @@ def get_all_subscriptions():
         return subscriptions_list
     except Exception as e:
         print(f"Произошла ошибка: {e}")
+        printl(f"Произошла ошибка: {e}")
     finally:
         # Закрываем соединение с базой данных
         conn.close()
@@ -102,6 +108,7 @@ def get_subscriptions_by_user_id(user_id):
         return subscriptions_list
     except Exception as e:
         print(f"Произошла ошибка: {e}")
+        printl(f"Произошла ошибка: {e}")
     finally:
         # Закрываем соединение с базой данных
         conn.close()

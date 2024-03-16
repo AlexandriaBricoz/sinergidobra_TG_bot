@@ -8,7 +8,8 @@ from aiogram.types import ChatPermissions
 
 import payment
 from create_bot import bot, bot_address, dp
-from keyboards.client_kb import keyboard, kb_client, back_keyboard_1, back_keyboard_0, pay_3_1, pay_3_2, pay_2
+from keyboards.client_kb import keyboard_start, kb_client, back_keyboard_1, back_keyboard_0
+from loging import printl
 from order_DB import Orders
 from school_database import sqlite_db
 from school_database.sqlite_db import get_all_subscriptions
@@ -30,6 +31,7 @@ def start():
 
 async def remove_expired_subscriptions():
     print('Запущен сервис для удаления пользователей')
+    printl('Запущен сервис для удаления пользователей')
     while True:
         # Ваш код удаления пользователей с истекшим сроком подписки
         conn = sqlite3.connect('bot_sql.db')
@@ -48,8 +50,10 @@ async def remove_expired_subscriptions():
                 await bot.restrict_chat_member(group_id, user_id, ChatPermissions(can_send_messages=False))
                 await bot.kick_chat_member(group_id, user_id)
                 print(f"Пользователь {user_id} исключен из группы.")
+                printl(f"Пользователь {user_id} исключен из группы.")
             except Exception as e:
                 print(f"Ошибка при удалении пользователя из группы: {e}")
+                printl(f"Ошибка при удалении пользователя из группы: {e}")
 
         # Пауза на один день перед следующей проверкой
         await asyncio.sleep(86400)  # 86400 секунд = 24 часа
@@ -57,6 +61,7 @@ async def remove_expired_subscriptions():
 
 async def remind_subscriptions():
     print('Напоминая запущены')
+    printl('Напоминая запущены')
     while True:
         try:
             # Получаем список подписок из базы данных
@@ -79,63 +84,64 @@ async def remind_subscriptions():
 
         except Exception as e:
             print(f"Произошла ошибка при отправке уведомлений: {e}")
+            printl(f"Произошла ошибка при отправке уведомлений: {e}")
 
         # Пауза на один день перед следующей проверкой
         await asyncio.sleep(86400)  # 86400 секунд = 24 часа
 
 
 # Обработчик команды /groupid
-@dp.message_handler(commands=['groupid'])
-async def show_group_id(message: types.Message):
-    # Проверяем, является ли сообщение отправленным в группу
-    if message.chat.type != types.ChatType.PRIVATE:
-        # Отправляем идентификатор группы
-        await message.reply(f"ID этой группы: {message.chat.id}")
-    else:
-        await message.reply("Эта команда работает только в группах.")
+# @dp.message_handler(commands=['groupid'])
+# async def show_group_id(message: types.Message):
+#     # Проверяем, является ли сообщение отправленным в группу
+#     if message.chat.type != types.ChatType.PRIVATE:
+#         # Отправляем идентификатор группы
+#         await message.reply(f"ID этой группы: {message.chat.id}")
+#     else:
+#         await message.reply("Эта команда работает только в группах.")
 
 
 # Обработчик команды /kick
-async def kick_user(message: types.Message, user_id, group_id):
-    # Проверяем, является ли сообщение отправленным в личные сообщения боту
-    if message.chat.type == types.ChatType.PRIVATE:
-        # Проверяем, что отправитель команды указал идентификатор группы
-        if 1:
-            try:
-                # Получаем идентификатор группы из аргументов команды
-                group_id = -1002030571529
-                # Проверяем, является ли отправитель команды администратором указанной группы
-                if message.from_user.id in [admin.user.id for admin in await bot.get_chat_administrators(group_id)]:
-                    # Получаем идентификатор пользователя, которого нужно исключить
-                    user_id = 1085385124
-                    # Передаем права, запрещающие пользователю отправлять сообщения в группе
-                    await bot.restrict_chat_member(group_id, user_id, ChatPermissions(can_send_messages=False))
-                    # Исключаем пользователя из группы
-                    await bot.kick_chat_member(group_id, user_id)
-                    await message.reply(
-                        f"Пользователь {message.reply_to_message.from_user.full_name} исключен из группы.")
-                else:
-                    await message.reply("Вы не являетесь администратором указанной группы.")
-            except ValueError:
-                await message.reply("Идентификатор группы должен быть числом.")
-        else:
-            await message.reply("Вы должны указать идентификатор группы вместе с командой.")
-    else:
-        await message.reply("Команда /kick должна быть использована в личных сообщениях боту.")
+# async def kick_user(message: types.Message, user_id, group_id):
+#     # Проверяем, является ли сообщение отправленным в личные сообщения боту
+#     if message.chat.type == types.ChatType.PRIVATE:
+#         # Проверяем, что отправитель команды указал идентификатор группы
+#         if 1:
+#             try:
+#                 # Получаем идентификатор группы из аргументов команды
+#                 group_id = -1002030571529
+#                 # Проверяем, является ли отправитель команды администратором указанной группы
+#                 if message.from_user.id in [admin.user.id for admin in await bot.get_chat_administrators(group_id)]:
+#                     # Получаем идентификатор пользователя, которого нужно исключить
+#                     user_id = 1085385124
+#                     # Передаем права, запрещающие пользователю отправлять сообщения в группе
+#                     await bot.restrict_chat_member(group_id, user_id, ChatPermissions(can_send_messages=False))
+#                     # Исключаем пользователя из группы
+#                     await bot.kick_chat_member(group_id, user_id)
+#                     await message.reply(
+#                         f"Пользователь {message.reply_to_message.from_user.full_name} исключен из группы.")
+#                 else:
+#                     await message.reply("Вы не являетесь администратором указанной группы.")
+#             except ValueError:
+#                 await message.reply("Идентификатор группы должен быть числом.")
+#         else:
+#             await message.reply("Вы должны указать идентификатор группы вместе с командой.")
+#     else:
+#         await message.reply("Команда /kick должна быть использована в личных сообщениях боту.")
 
 
 @dp.message_handler(commands=['start', 'help'])
 async def start_bot(message: types.Message):
     bot_home = bot_address  # можно указать адрес бота в телеграм строкой 't.me/bot'
-    print(message.from_user.id, message.from_user.full_name)
-
+    print(message.from_user.id, message.from_user.full_name, message.from_user.username)
+    printl(message.from_user.id, message.from_user.full_name, message.from_user.username)
     await bot.send_message(message.from_user.id,
                            f'Приветствуем вас, {message.from_user.full_name} 👋',
                            reply_markup=kb_client
                            )
     await bot.send_message(message.from_user.id,
                            f'🗓 Выберите свой тарифный план👇👋',
-                           reply_markup=keyboard)
+                           reply_markup=keyboard_start)
 
     # await message.reply(f'Пожалуйста напишите боту в ЛС: {bot_home}')
 
@@ -145,7 +151,10 @@ def create_pay_button(message: types.Message, amount, description):
     keyboard = types.InlineKeyboardMarkup()
     button = types.InlineKeyboardButton(text=description,
                                         url=pay.confirmation.confirmation_url)
-    print(pay.id)
+    print('Создана ссылка для ', message.from_user.id, message.from_user.full_name, message.from_user.username, pay.id,
+          'Сумма: ', amount, 'Артикул: ', pay.description)
+    printl('Создана ссылка для ', message.from_user.id, message.from_user.full_name, message.from_user.username, pay.id,
+           'Сумма: ', amount, 'Артикул: ', pay.description)
     # Добавляем кнопки на клавиатуру в виде списка
     orders = Orders()
     orders.create_order(pay.id, message.from_user.id, message.from_user.username,
@@ -168,30 +177,25 @@ async def process_callback(callback_query: types.CallbackQuery):
         keyboard = create_pay_button(callback_query, 1.00,
                                      "1490₽")
         await callback_query.message.reply("Курс для новичков - 4 практики на основные направления "
-                                           "подвижности с подробными инструкциями и отстройками.",
+                                           "подвижности с подробными инструкциями и отстройками. \n\n"
+                                           "После оплаты нажмите \"Проверить\", после бот пришлёт вам курс.",
                                            reply_markup=keyboard)
     elif data == "tariff_3":
         keyboard = create_pay_button(callback_query, 1.00,
                                      "2800₽")
         await callback_query.message.reply("Клуб - это возможность участвовать в онлайн-тренировках "
-                                           "и получать доступ к записям занятий.",
+                                           "и получать доступ к записям занятий. \n\n"
+                                           "После оплаты нажмите \"Проверить\", после бот подключит вам подписку.",
                                            reply_markup=keyboard)
     if data == "tariff_1_1":
-        await callback_query.message.reply("https://www.youtube.com/watch?v=Q8axQa1QSCI",
+        await callback_query.message.reply("https://t.me/+4cSYv_mpEx01ODY6",
                                            reply_markup=back_keyboard_0)
-    elif data == "tariff_2_1":
-        await callback_query.message.reply("Отличный выбор, переходим к оплате", reply_markup=pay_2)
-    elif data == "tariff_3_1":
-        await callback_query.message.reply("Отличный выбор, переходим к оплате", reply_markup=pay_3_1)
-    elif data == "tariff_3_2":
-        await callback_query.message.reply("Для того чтобы заниматься в клубе офлайн свяжитесь с куратором",
-                                           reply_markup=pay_3_2)
     elif data == "tariff_3_2_1":
         await get_contacts(callback_query)
     elif data == "tariff_0":
         await callback_query.message.reply(
             f'🗓 Выберите свой тарифный план👇👋',
-            reply_markup=keyboard)
+            reply_markup=keyboard_start)
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith('order'))
@@ -199,7 +203,6 @@ async def process_callback(callback_query: types.CallbackQuery):
     await callback_query.answer()
     data = callback_query.data
     if data[-5:] == '2800₽':
-        print('2800 ',data[6:][:-6])
         orders = Orders()
         if payment.check_payment_status(data[6:][:-6]) and not orders.check_order_payment(data[6:][:-6]):
 
@@ -209,15 +212,30 @@ async def process_callback(callback_query: types.CallbackQuery):
                                        datetime.now().date(),
                                        datetime.now().date() + timedelta(days=31))
             await callback_query.message.reply("Оплата прошла УСПЕШНО")
+            print('Подтверждён платёж для ', callback_query.from_user.id, callback_query.from_user.full_name,
+                  callback_query.from_user.username,
+                  data[6:][:-6],
+                  'Сумма: ', 2800, 'Артикул: ', data[-5:])
+            printl('Подтверждён платёж для ', callback_query.from_user.id, callback_query.from_user.full_name,
+                   callback_query.from_user.username,
+                   data[6:][:-6],
+                   'Сумма: ', 2800, 'Артикул: ', data[-5:])
         else:
             await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
     elif data[-5:] == '1490₽':
-        print('1490 ',data[6:][:-6])
         orders = Orders()
         if payment.check_payment_status(data[6:][:-6]) and not orders.check_order_payment(data[6:][:-6]):
             orders.confirm_order(data[6:][:-6])
             await callback_query.message.reply("Оплата прошла УСПЕШНО")
             await course_for_beginners(callback_query)
+            print('Подтверждён платёж для ', callback_query.from_user.id, callback_query.from_user.full_name,
+                  callback_query.from_user.username,
+                  data[6:][:-6],
+                  'Сумма: ', 1490, 'Артикул: ', data[-5:])
+            printl('Подтверждён платёж для ', callback_query.from_user.id, callback_query.from_user.full_name,
+                   callback_query.from_user.username,
+                   data[6:][:-6],
+                   'Сумма: ', 1490, 'Артикул: ', data[-5:])
         else:
             await callback_query.message.reply("Оплата прошла НЕУСПЕШНО")
 
@@ -261,7 +279,7 @@ async def my_tariff(message: types.Message, ):
 async def tariffs(message: types.Message, ):
     await bot.send_message(message.from_user.id,
                            f'🗓 Выберите свой тарифный план👇👋',
-                           reply_markup=keyboard)
+                           reply_markup=keyboard_start)
 
 
 # Обработчик команды /kick

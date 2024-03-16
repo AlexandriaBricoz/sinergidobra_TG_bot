@@ -14,16 +14,17 @@ but1 = KeyboardButton('Оплатить')
 kb_client_1 = ReplyKeyboardMarkup(resize_keyboard=True)
 kb_client_1.add(but1)
 
-keyboard = types.InlineKeyboardMarkup()
+keyboard_start = types.InlineKeyboardMarkup()
 
 # Добавляем кнопки на клавиатуру
-button1 = types.InlineKeyboardButton(text="Бесплатный урок", callback_data="tariff_1")
-button2 = types.InlineKeyboardButton(text="Курс для новичков", callback_data="tariff_2")
-button3 = types.InlineKeyboardButton(text="Вступить в клуб", callback_data="tariff_3")
+button1_start = types.InlineKeyboardButton(text="Бесплатный урок", callback_data="tariff_1")
+button2_start = types.InlineKeyboardButton(text="Курс для новичков", callback_data="tariff_2")
+button3_start = types.InlineKeyboardButton(text="Вступить в клуб", callback_data="tariff_3")
 # Добавляем кнопки на клавиатуру в виде списка
-keyboard.add(button1)
-keyboard.add(button2)
-keyboard.add(button3)
+keyboard_start.add(button1_start)
+keyboard_start.add(button2_start)
+keyboard_start.add(button3_start)
+
 
 #######################################################################################################
 back_keyboard_0 = types.InlineKeyboardMarkup()
