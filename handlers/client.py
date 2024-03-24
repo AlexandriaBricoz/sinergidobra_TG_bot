@@ -1,18 +1,12 @@
-import asyncio
-import sqlite3
-from datetime import datetime, date
-
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
-from aiogram.types import ChatPermissions
 
 import payment
 from create_bot import bot, bot_address, dp
-from keyboards.client_kb import keyboard_start
+from keyboards.client_kb import keyboard_start, keyboard_next
 from loging import printl
 from order_DB import Orders, Orders2
-from school_database.sqlite_db import get_all_subscriptions
 
 """Хендлеры для взаимодействия с клиентом
 
@@ -22,114 +16,6 @@ from school_database.sqlite_db import get_all_subscriptions
 """
 
 from aiogram.dispatcher.filters.state import StatesGroup, State
-
-
-def start():
-    loop = asyncio.get_event_loop()
-    loop.create_task(remind_subscriptions())
-    loop1 = asyncio.get_event_loop()
-    loop1.create_task(remove_expired_subscriptions())
-
-
-async def remove_expired_subscriptions():
-    print('Запущен сервис для удаления пользователей')
-    printl('Запущен сервис для удаления пользователей')
-    while True:
-        # Ваш код удаления пользователей с истекшим сроком подписки
-        conn = sqlite3.connect('bot_sql.db')
-        cur = conn.cursor()
-        cur.execute("SELECT user_id FROM users WHERE end_date < date('now')")
-        expired_users = cur.fetchall()  # Получаем список пользователей с истекшим сроком подписки
-        cur.execute("DELETE FROM users WHERE end_date < date('now')")
-        conn.commit()
-        conn.close()
-
-        # Удаление пользователей из группы
-        for user_id in expired_users:
-            try:
-                # Указываете идентификатор группы, из которой нужно удалить пользователя
-                group_id = -1002030571529
-                await bot.restrict_chat_member(group_id, user_id, ChatPermissions(can_send_messages=False))
-                await bot.kick_chat_member(group_id, user_id)
-                print(f"Пользователь {user_id} исключен из группы.")
-                printl(f"Пользователь {user_id} исключен из группы.")
-            except Exception as e:
-                print(f"Ошибка при удалении пользователя из группы: {e}")
-                printl(f"Ошибка при удалении пользователя из группы: {e}")
-
-        # Пауза на один день перед следующей проверкой
-        await asyncio.sleep(86400)  # 86400 секунд = 24 часа
-
-
-async def remind_subscriptions():
-    print('Напоминая запущены')
-    printl('Напоминая запущены')
-    while True:
-        try:
-            # Получаем список подписок из базы данных
-            subscriptions = get_all_subscriptions()
-
-            # Получаем текущую дату
-            current_date = date.today()
-
-            # Перебираем подписки
-            for subscription in subscriptions:
-                id, user_id, username, full_name, start_date, end_date = subscription
-
-                # Проверяем, сколько дней осталось до окончания подписки
-                days_left = (datetime.strptime(end_date, '%Y-%m-%d').date() - current_date).days
-
-                # Если остался ровно один день до окончания подписки, отправляем уведомление
-                if days_left == 1:
-                    message = f"{full_name}!Ваша подписка закончится завтра. Пожалуйста, продлите её!"
-                    await bot.send_message(user_id, message)
-
-        except Exception as e:
-            print(f"Произошла ошибка при отправке уведомлений: {e}")
-            printl(f"Произошла ошибка при отправке уведомлений: {e}")
-
-        # Пауза на один день перед следующей проверкой
-        await asyncio.sleep(86400)  # 86400 секунд = 24 часа
-
-
-# Обработчик команды /groupid
-# @dp.message_handler(commands=['groupid'])
-# async def show_group_id(message: types.Message):
-#     # Проверяем, является ли сообщение отправленным в группу
-#     if message.chat.type != types.ChatType.PRIVATE:
-#         # Отправляем идентификатор группы
-#         await message.reply(f"ID этой группы: {message.chat.id}")
-#     else:
-#         await message.reply("Эта команда работает только в группах.")
-
-
-# Обработчик команды /kick
-# async def kick_user(message: types.Message, user_id, group_id):
-#     # Проверяем, является ли сообщение отправленным в личные сообщения боту
-#     if message.chat.type == types.ChatType.PRIVATE:
-#         # Проверяем, что отправитель команды указал идентификатор группы
-#         if 1:
-#             try:
-#                 # Получаем идентификатор группы из аргументов команды
-#                 group_id = -1002030571529
-#                 # Проверяем, является ли отправитель команды администратором указанной группы
-#                 if message.from_user.id in [admin.user.id for admin in await bot.get_chat_administrators(group_id)]:
-#                     # Получаем идентификатор пользователя, которого нужно исключить
-#                     user_id = 1085385124
-#                     # Передаем права, запрещающие пользователю отправлять сообщения в группе
-#                     await bot.restrict_chat_member(group_id, user_id, ChatPermissions(can_send_messages=False))
-#                     # Исключаем пользователя из группы
-#                     await bot.kick_chat_member(group_id, user_id)
-#                     await message.reply(
-#                         f"Пользователь {message.reply_to_message.from_user.full_name} исключен из группы.")
-#                 else:
-#                     await message.reply("Вы не являетесь администратором указанной группы.")
-#             except ValueError:
-#                 await message.reply("Идентификатор группы должен быть числом.")
-#         else:
-#             await message.reply("Вы должны указать идентификатор группы вместе с командой.")
-#     else:
-#         await message.reply("Команда /kick должна быть использована в личных сообщениях боту.")
 
 
 @dp.message_handler(commands=['start', 'help'])
@@ -147,31 +33,21 @@ async def start_bot(message: types.Message):
 Телеграм-канал проекта «Синергия Добра»: https://t.me/sinergidobra''')
 
     await bot.send_message(message.from_user.id,
+                           f'''Приветствуем вас! Пожалуйста, ознакомьтесь с нашими правилами использования перед тем, как продолжить:
+https://sinergidobra.ru/privacy
+                           
+Если вы продолжаете, вы подтверждаете, что ознакомились с нашим пользовательским соглашением и согласны с его условиями.''',
+                           reply_markup=keyboard_next)
+
+
+@dp.message_handler(Text(equals='Продолжить', ignore_case=True))
+async def get_contacts(message: types.Message):
+    await bot.send_message(message.from_user.id,
                            f'''Если Вы хотите заполнить заявку на волонтерство, напишите боту - заполнить заявку на волонтерство
 
 Если Вы хотели бы участвовать в мастер классе, напишите боту - хочу на мастер-класс''',
                            reply_markup=keyboard_start)
-    # await message.reply(f'Пожалуйста напишите боту в ЛС: {bot_home}')
-
-
-def create_pay_button(message: types.Message, amount, description):
-    pay = payment.create_payment(full_name=message.from_user.full_name, amount=amount, description=description)
-    keyboard = types.InlineKeyboardMarkup()
-    button = types.InlineKeyboardButton(text=description,
-                                        url=pay.confirmation.confirmation_url)
-    print('Создана ссылка для ', message.from_user.id, message.from_user.full_name, message.from_user.username, pay.id,
-          'Сумма: ', amount, 'Артикул: ', pay.description)
-    printl('Создана ссылка для ', message.from_user.id, message.from_user.full_name, message.from_user.username, pay.id,
-           'Сумма: ', amount, 'Артикул: ', pay.description)
-    # Добавляем кнопки на клавиатуру в виде списка
-    orders = Orders()
-    orders.create_order(pay.id, message.from_user.id, message.from_user.username,
-                        message.from_user.full_name, pay.description, amount)
-
-    confirm_button = types.InlineKeyboardButton(text='Проверить', callback_data=f"order {pay.id} {description}")
-    # Добавляем кнопки на клавиатуру в виде списка
-    keyboard.add(button).add(confirm_button)
-    return keyboard
+    printl(message.from_user.id, message.from_user.username, message.from_user.full_name)
 
 
 @dp.message_handler(Text(equals='Соцсети проекта', ignore_case=True))
@@ -267,7 +143,8 @@ class AnketForm_2(StatesGroup):
 # Обработчики состояний для класса Anket_2Form
 @dp.message_handler(Text(equals='Заполнить заявку на волонтерство', ignore_case=True))
 async def start_survey_2(message: types.Message):
-    await bot.send_message(message.from_user.id, f'Для начала давайте познакомимся немного поближе, как Вас зовут? (ФИО)')
+    await bot.send_message(message.from_user.id,
+                           f'Для начала давайте познакомимся немного поближе, как Вас зовут? (ФИО)')
     await AnketForm_2.name.set()
 
 
@@ -375,7 +252,8 @@ async def process_about(message: types.Message, state: FSMContext):
     orders = Orders2()
     # user_id, username, name, number, email, network, theme, achievements, time, tool, tools, quantity, additional_info
     orders.save_answer(message.from_user.id, message.from_user.username, data['name'], data['number'], data['email'],
-                       data['network'], data['human'], data['theme'],data['achievements'], data['time'], data['tool'], data['tools'],
+                       data['network'], data['human'], data['theme'], data['achievements'], data['time'], data['tool'],
+                       data['tools'],
                        data['quantity'], data['about'])
     await message.answer('''Благодарим за заявку🙏🏻
 Будем рады сотрудничеству🤝

@@ -13,7 +13,6 @@ async def on_startup(_):
 
 
 sqlite_db.create_table()
-handlers.client.start()
 client.handlers_register(dp)
 manage.handlers_register_manage(dp)
 common.register_common_handlers(dp)

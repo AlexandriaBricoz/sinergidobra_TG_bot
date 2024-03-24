@@ -1,4 +1,5 @@
 import sqlite3
+from datetime import datetime
 
 
 class Orders:
@@ -16,9 +17,9 @@ class Orders:
             name TEXT,
             age INTEGER,
             theme TEXT,
-            children BOOLEAN,
-            children_age INTEGER,
-            date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            children TEXT,
+            children_age TEXT,
+            date TEXT
         )
         ''')
         self.connection.commit()
@@ -27,11 +28,15 @@ class Orders:
         self.connection = sqlite3.connect("my_db_path.db")
         self.cursor = self.connection.cursor()
         self.cursor.execute(
-            "INSERT INTO answers (user_id, username, name, age, theme, children, children_age) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (user_id, username, name, age, theme, children, children_age))
+            "INSERT INTO answers (user_id, username, name, age, theme, children, children_age, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (user_id, username, name, age, theme, children, children_age, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         self.connection.commit()
         self.cursor.close()
         self.connection.close()
+
+    def get_all_orders(self):
+        self.cursor.execute("SELECT * FROM answers")
+        return self.cursor.fetchall()
 
 
 class Orders2:
@@ -42,7 +47,8 @@ class Orders2:
         self.connection = sqlite3.connect("my_db_path_2.db")
         self.cursor = self.connection.cursor()
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS answers
-             (user_id INTEGER PRIMARY KEY,
+             (id INTEGER PRIMARY KEY AUTOINCREMENT,
+             user_id TEXT,
              username TEXT,
              name TEXT,
              number TEXT,
@@ -55,7 +61,8 @@ class Orders2:
              tool TEXT,
              tools TEXT,
              quantity TEXT,
-             about TEXT)''')
+             about TEXT,
+             date)''')
         self.connection.commit()
 
     def save_answer(self, user_id, username, name, number, email, network, human, theme, achievements, time, tool,
@@ -64,13 +71,18 @@ class Orders2:
         self.connection = sqlite3.connect("my_db_path_2.db")
         self.cursor = self.connection.cursor()
         self.cursor.execute(
-            '''INSERT INTO answers (user_id, username, name, number, email, network, human, theme, achievements, time, tool, tools, quantity, about)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+            '''INSERT INTO answers (user_id, username, name, number, email, network, human, theme, achievements, time, tool, tools, quantity, about, date)
+              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
             (user_id, username, name, number, email, network, human, theme, achievements, time, tool, tools, quantity,
-             about))
+             about, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         self.connection.commit()
         self.cursor.close()
         self.connection.close()
 
+    def get_all_orders(self):
+        self.cursor.execute("SELECT * FROM answers")
+        return self.cursor.fetchall()
 
+
+Orders()
 Orders2()

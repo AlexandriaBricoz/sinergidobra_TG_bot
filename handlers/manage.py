@@ -6,10 +6,8 @@ from aiogram.dispatcher.filters import Text
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
 from create_bot import bot, masters_id
-from handlers.client import remove_expired_subscriptions
 from keyboards.manage_kb import kb_manage_3
-from order_DB import Orders
-from school_database import sqlite_db
+from order_DB import Orders, Orders2
 
 """Администрирование Бота через FSM
 Внесение изменений в базу через интерфейс Telegram
@@ -49,7 +47,6 @@ async def verify_owner(message: types.Message):
     if id_check in ID_MASTER:
         await bot.send_message(message.from_user.id, 'Готов к работе, пожалуйста выбери команды на клавиатуре',
                                reply_markup=kb_manage_3)
-        await remove_expired_subscriptions()
     else:
         await bot.send_message(message.from_user.id, 'Доступ запрещен')
     await message.delete()
@@ -59,19 +56,21 @@ async def verify_owner(message: types.Message):
 async def output_users(message: types.Message):
     id_check = message.from_user.id
     if id_check in ID_MASTER:
-        answer = ''
-        for i in sqlite_db.get_all_subscriptions():
-            answer = f'{answer}\nusername: {i[2]}, full_name:{i[3]} start: {i[4]} end: {i[5]}'
+        orders = Orders2()
         data = []
-        for i in sqlite_db.get_all_subscriptions():
+        for i in orders.get_all_orders():
+            print(i)
             data.append([
-                i[1], i[2], i[3], i[4], i[5]
+                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12], i[13], i[14], i[15]
             ])
-        df = pd.DataFrame(data, columns=['ID пользователя', 'имя пользователя', 'полное имя', 'начало', 'конец'])
+        df = pd.DataFrame(data, columns=['id', 'user_id', 'username', 'ФИО', 'Номер телефона', 'email', 'контакты',
+                                         'С кем работаете?', 'Тема мастер-класса',
+                                         'Регалии', 'Сколько по времени длится занятие?', 'Нужны ли инструменты?',
+                                         'Инструменты', 'Максимальное количество учеников', 'О себе', 'дата'])
         buffer = io.BytesIO()
-        buffer.name = 'users.xlsx'
+        buffer.name = 'Заявки на волонтёрство.xlsx'
         with pd.ExcelWriter(buffer) as writer:
-            df.to_excel(excel_writer=writer, sheet_name='Users', engine='xlsxwriter')
+            df.to_excel(excel_writer=writer, sheet_name='Заявки на волонтёрство', engine='xlsxwriter')
         buffer.seek(0)
         await bot.send_document(message.from_user.id, document=buffer)
     else:
@@ -90,13 +89,12 @@ async def output_pay(message: types.Message):
                 i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8]
             ])
         df = pd.DataFrame(data,
-                          columns=['ID заказа', 'ID пользователя', 'имя пользователя', 'полное имя', 'дата создания',
-                                   'дата подтверждения',
-                                   'статус', 'артикул', 'цена'])
+                          columns=['id', 'user_id', 'username', 'name', 'age', 'theme', 'children', 'children_age',
+                                   'дата'])
         buffer = io.BytesIO()
-        buffer.name = 'orders.xlsx'
+        buffer.name = 'Заявки на мастер-класс.xlsx'
         with pd.ExcelWriter(buffer) as writer:
-            df.to_excel(excel_writer=writer, sheet_name='Orders', engine='xlsxwriter')
+            df.to_excel(excel_writer=writer, sheet_name='Заявки на мастер-класс', engine='xlsxwriter')
         buffer.seek(0)
         await bot.send_document(message.from_user.id, document=buffer)
     else:
@@ -122,6 +120,6 @@ async def output_log(message: types.Message):
 def handlers_register_manage(dp: Dispatcher):
     # FSM для курсов
     dp.register_message_handler(verify_owner, commands=['moderate'])
-    dp.register_message_handler(output_users, Text(equals='Ученики', ignore_case=True))
-    dp.register_message_handler(output_pay, Text(equals='Платежи', ignore_case=True))
+    dp.register_message_handler(output_users, Text(equals='Заявки на волонтёрство', ignore_case=True))
+    dp.register_message_handler(output_pay, Text(equals='Заявки на мастер-класс', ignore_case=True))
     dp.register_message_handler(output_log, Text(equals='Логи', ignore_case=True))
