@@ -540,11 +540,12 @@ async def save_user_data_2(state: FSMContext):
         conn = sqlite3.connect('my_db_path_2.db')
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO users 
-                          (name, svr_phone, svr_email, svr_telegram, svr_social, 
+                          (name, svr_phone, svr_email, svr_telegram, svr_social, svr_participation,
                            activity, master_class_description, age_category, group_type,
                            participant_count, free_classes_count) 
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (data['name'], data['svr_phone'], data['svr_email'], data['svr_telegram'], data['svr_social'],
+                        data['svr_participation'],
                         data['activity'], data['master_class_description'],
                         data['age_category'], data['group_type'], data['participant_count'],
                         data['free_classes_count']))

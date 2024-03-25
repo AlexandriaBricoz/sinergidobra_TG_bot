@@ -45,6 +45,7 @@ class Orders2:
             svr_email TEXT,
             svr_telegram TEXT,
             svr_social TEXT,
+            svr_participation TEXT,
             activity TEXT,
             master_class_description TEXT,
             age_category TEXT,

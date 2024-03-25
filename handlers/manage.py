@@ -56,14 +56,14 @@ async def verify_owner(message: types.Message):
 async def output_pay(message: types.Message):
     id_check = message.from_user.id
     if id_check in ID_MASTER:
-        orders = Orders2()
+        orders = Orders()
         data = []
         for i in orders.get_all_orders():
             print(i)
             data.append([
-                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11]
+                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10]
             ])
-        df = pd.DataFrame(data, columns=['id', 'user_id', 'username', 'ФИО', 'Участвует ли член вашей семьи в СВО?',
+        df = pd.DataFrame(data, columns=['id', 'user_id',  'ФИО', 'Участвует ли член вашей семьи в СВО?',
                                          'Номер телефона',
                                          'Электронную почта', 'Ник в телеграм',
                                          'Соцсети', 'Есть ли дети?', 'Сколько детей', 'Возраст детей'])
@@ -82,15 +82,16 @@ async def output_pay(message: types.Message):
 # @dp.message_handler(commands=['Заявки на волонтёрство'])
 async def output_users(message: types.Message):
     id_check = message.from_user.id
-    orders = Orders()
+    orders = Orders2()
     if id_check in ID_MASTER:
         data = []
         for i in orders.get_all_orders():
+            print('sfvfdv    ',i)
             data.append([
-                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12], i[13], i[14]
+                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12]
             ])
         df = pd.DataFrame(data,
-                          columns=['id', 'user_id', 'username', 'ФИО',
+                          columns=['id', 'ФИО',
                                    'Номер телефона',
                                    'Электронную почта', 'Ник в телеграм',
                                    'Соцсети', 'Работаете со взрослыми или детьми?', 'Род деятельности',
