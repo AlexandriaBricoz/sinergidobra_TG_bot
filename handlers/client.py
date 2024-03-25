@@ -1,12 +1,14 @@
+import sqlite3
+
 from aiogram import types, Dispatcher
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters import Text
 from aiogram.types import ReplyKeyboardRemove
 
 from create_bot import bot, dp
-from keyboards.client_kb import keyboard_next, keyboard_start_2, keyboard_start, keyboard_cancel, keyboard_cancel_age
+from keyboards.client_kb import keyboard_next, keyboard_start_2, keyboard_cancel, keyboard_yes_no, \
+    keyboard_children_number, keyboard_group_type, keyboard_activity, keyboard_age, keyboard_activity_2
 from loging import printl
-from order_DB import Orders, Orders2
 
 """Хендлеры для взаимодействия с клиентом
 
@@ -23,14 +25,12 @@ async def start_bot(message: types.Message):
     print(message.from_user.id, message.from_user.full_name, message.from_user.username)
     printl(message.from_user.id, message.from_user.full_name, message.from_user.username)
     photo = open('photo_2024-03-23 20.04.59.jpeg', 'rb')
-    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''Наш проект «Содружество Сердец»🇷🇺 направлен на создание общественной поддержки жен военнослужащих, участников СВО, создание условий для повышения социально-психологической поддержки семей участников СВО и вовлечение их на мастер-классы, кураторство, психологические консультации.
-
-Сайт: https://sinergidobra.ru/
-
-Инстаграм проекта «Синергия Добра»: https://www.instagram.com/sinergidobra?igsh=NDUyb3AwbGYyOXFq
-
-Телеграм-канал проекта «Синергия Добра»: https://t.me/sinergidobra''')
-
+    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''Синергия добра приветсвует Вас. 
+Мы создаем сообщество, в котором объединяем людей, желающих поддержать женщин и детей наших бойцов.
+''')
+    await bot.send_message(message.from_user.id,
+                           f'''Я виртуалтный помощник Синергии добра! Чтобы добавить Вас в наше сообщество , задам несколько вопросов, это займет у вас не более 5 минут. ''',
+                           reply_markup=ReplyKeyboardRemove())
     await bot.send_message(message.from_user.id,
                            f'''Приветствуем вас! Пожалуйста, ознакомьтесь с нашими правилами использования перед тем, как продолжить:
 https://sinergidobra.ru/privacy
@@ -42,17 +42,11 @@ https://sinergidobra.ru/privacy
 @dp.message_handler(Text(equals='🔝 Главное Меню', ignore_case=True))
 async def main(message: types.Message):
     photo = open('photo_2024-03-23 20.04.59.jpeg', 'rb')
-    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''Наш проект «Содружество Сердец»🇷🇺 направлен на создание общественной поддержки жен военнослужащих, участников СВО, создание условий для повышения социально-психологической поддержки семей участников СВО и вовлечение их на мастер-классы, кураторство, психологические консультации.
-
-Сайт: https://sinergidobra.ru/
-
-Инстаграм проекта «Синергия Добра»: https://www.instagram.com/sinergidobra?igsh=NDUyb3AwbGYyOXFq
-
-Телеграм-канал проекта «Синергия Добра»: https://t.me/sinergidobra''', reply_markup=ReplyKeyboardRemove())
+    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''Синергия добра приветсвует Вас. 
+    Мы создаем сообщество, в котором объединяем людей, желающих поддержать женщин и детей наших бойцов.
+    ''')
     await bot.send_message(message.from_user.id,
-                           f'''Если Вы хотите заполнить заявку на волонтерство, напишите боту - заполнить заявку на волонтерство
-
-Если Вы хотели бы участвовать в мастер классе, напишите боту - хочу на мастер-класс''',
+                           f'''Я виртуалтный помощник Синергии добра! Чтобы добавить Вас в наше сообщество , задам несколько вопросов, это займет у вас не более 5 минут. ''',
                            reply_markup=keyboard_start_2)
 
 
@@ -63,7 +57,7 @@ async def back(message: types.Message):
 
 @dp.message_handler(Text(equals='Продолжить', ignore_case=True))
 async def get_contacts(message: types.Message):
-    sent_message = await bot.send_message(message.from_user.id,'Супер', reply_markup=ReplyKeyboardRemove())
+    sent_message = await bot.send_message(message.from_user.id, 'Супер', reply_markup=ReplyKeyboardRemove())
     await bot.delete_message(message.chat.id, sent_message.message_id)
     await bot.send_message(message.from_user.id,
                            f'''Если Вы хотите заполнить заявку на волонтерство, напишите боту - заполнить заявку на волонтерство
@@ -97,138 +91,330 @@ async def process_callback(callback_query: types.CallbackQuery):
     if data == "Соцсети проекта":
         await get_contacts(callback_query)
     elif data == "Хочу на мастер-класс":
-        await course_for_beginners(callback_query)
+        await start_survey_22(callback_query)
     elif data == "Заполнить заявку на волонтерство":
         await start_survey(callback_query)
 
 
 class AnketForm(StatesGroup):
     name = State()
-    age = State()
-    theme = State()
+    svr_participation = State()
+    svr_phone = State()
+    svr_email = State()
+    svr_telegram = State()
+    svr_social = State()
     children = State()
+    children_number = State()
     children_age = State()
 
 
 @dp.message_handler(Text(equals='Хочу на мастер-класс', ignore_case=True))
-async def course_for_beginners(message: types.Message):
-    await bot.send_message(message.from_user.id, f'ФИО', reply_markup=keyboard_cancel)
+async def start_survey_22(message: types.Message):
+    await bot.send_message(message.from_user.id, "Давайте знакомиться!\nКак Вас зовут? (ФИО)",
+                           reply_markup=keyboard_cancel)
     await AnketForm.name.set()
 
 
-@dp.message_handler(Text(equals='хочу на мастер-класс', ignore_case=True))
-async def course_for_beginners_2(message: types.Message):
-    await bot.send_message(message.from_user.id, f'ФИО', reply_markup=keyboard_cancel)
-    await AnketForm.name.set()
-
-
+# Asking for name
 @dp.message_handler(state=AnketForm.name)
 async def process_name(message: types.Message, state: FSMContext):
+    async with state.proxy() as data:
+        data.update({
+            'name': message.text,
+            'svr_participation': None,
+            'svr_phone': None,
+            'svr_email': None,
+            'svr_telegram': None,
+            'svr_social': None,
+            'children': None,
+            'children_number': None,
+            'children_age': None
+        })
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
 
-    async with state.proxy() as data:
-        data['name'] = message.text
-    await message.answer("Возраст", reply_markup=keyboard_cancel)
+    await state.update_data(name=message.text)
+    await bot.send_message(message.from_user.id, f"Какое у Вас красивое имя, {message.text}! Приятно познакомиться!\n"
+                                                 "Впереди несколько вопросов, они пролетят незаметно. Поехали!")
+
+    await bot.send_message(message.from_user.id, "Участвует ли член вашей семьи в СВО?", reply_markup=keyboard_yes_no)
     await AnketForm.next()
 
 
-@dp.message_handler(state=AnketForm.age)
-async def process_age(message: types.Message, state: FSMContext):
+# Asking SVR participation
+@dp.message_handler(state=AnketForm.svr_participation)
+async def process_svr_participation(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
 
+    if message.text.lower() not in ["да", "нет"]:
+        await message.answer("❌ Ответ не из списка.\n\n🔄 Попробуйте еще раз…", reply_markup=keyboard_yes_no)
+        await state.set_state(AnketForm.svr_participation)
+        return
+
+    svr_participation = message.text.lower() == 'да'
+    await state.update_data(svr_participation=svr_participation)
     async with state.proxy() as data:
-        data['age'] = message.text
-    await message.answer("Желаемая тема мастер-класса", reply_markup=keyboard_cancel)
-    await AnketForm.next()
+        data['svr_participation'] = message.text
+    if svr_participation:
+
+        await message.answer("Ну а теперь несколько вопросов о Вашем участии в благотворительном проекте:")
+
+        await message.answer("Напишите Ваш номер телефона для связи (формат: +79030000009).",
+                             reply_markup=keyboard_cancel)
+        await AnketForm.svr_phone.set()
+    else:
+        await save_data_to_database(state)
+        await message.answer("Благодарим за заявку! 🌸")
+        await state.finish()
 
 
-@dp.message_handler(state=AnketForm.theme)
-async def process_theme(message: types.Message, state: FSMContext):
+# Asking for SVR phone
+@dp.message_handler(state=AnketForm.svr_phone)
+async def process_svr_phone(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
-
     async with state.proxy() as data:
-        data['theme'] = message.text
-    await message.answer("Есть ли у Вас дети?", reply_markup=keyboard_cancel)
-    await AnketForm.next()
+        data['svr_phone'] = message.text
+    await state.update_data(svr_phone=message.text)
+    await bot.send_message(message.from_user.id, "А также Вашу электронную почту (Формат почты: example@gmail.com).",
+                           reply_markup=keyboard_cancel)
+    await AnketForm.svr_email.set()
 
 
+# Asking for SVR email
+@dp.message_handler(state=AnketForm.svr_email)
+async def process_svr_email(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['svr_email'] = message.text
+    await state.update_data(svr_email=message.text)
+    await bot.send_message(message.from_user.id, "Теперь просим вписать Ваш ник в телеграм.",
+                           reply_markup=keyboard_cancel)
+    await AnketForm.svr_telegram.set()
+
+
+# Asking for SVR telegram
+@dp.message_handler(state=AnketForm.svr_telegram)
+async def process_svr_telegram(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['svr_telegram'] = message.text
+    await state.update_data(svr_telegram=message.text)
+    await bot.send_message(message.from_user.id, "По желанию вы можете поделиться ссылками на Ваши соцсети (вк, сайт).",
+                           reply_markup=keyboard_cancel)
+    await AnketForm.svr_social.set()
+
+
+# Asking for SVR social
+@dp.message_handler(state=AnketForm.svr_social)
+async def process_svr_social(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['svr_social'] = message.text
+    await state.update_data(svr_social=message.text)
+    await message.answer("Есть ли у Вас дети?", reply_markup=keyboard_yes_no)
+    await AnketForm.children.set()
+
+
+# Asking for children
 @dp.message_handler(state=AnketForm.children)
 async def process_children(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
+    if message.text.lower() not in ["да", "нет"]:
+        await message.answer("❌ Ответ не из списка.\n\n🔄 Попробуйте еще раз…", reply_markup=keyboard_yes_no)
+        await state.set_state(AnketForm.children)
+        return
+    children = message.text.lower() == 'да'
 
     async with state.proxy() as data:
         data['children'] = message.text
-    if data['children'].lower() != 'нет':
-        await message.answer("Возраст ребенка (детей)", reply_markup=keyboard_cancel)
-        await AnketForm.next()
+        print(data['children'])
+    await state.update_data(children=children)
+
+    if children:
+        await message.answer("Сколько у вас детей?", reply_markup=keyboard_children_number)
+        await AnketForm.children_number.set()
     else:
-        await message.answer("Благодарим за заявку🌸")
+        await save_data_to_database(state)
+        await message.answer("Благодарим за заявку! 🌸")
         await state.finish()
 
 
-@dp.message_handler(state=AnketForm.children_age)
-async def process_children_age(message: types.Message, state: FSMContext):
+# Asking for children number
+@dp.message_handler(state=AnketForm.children_number)
+async def process_children_number(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
 
     async with state.proxy() as data:
+        data['children_number'] = message.text
+
+    await state.update_data(children_number=message.text)
+    await message.answer("Возраст детей?")
+    await AnketForm.children_age.set()
+
+
+# Asking for children age
+@dp.message_handler(state=AnketForm.children_age)
+async def process_children_age(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
         data['children_age'] = message.text
-        print(data)
-    orders = Orders()
-    orders.save_answer(message.from_user.id, message.from_user.username, data['name'], data['age'], data['theme'],
-                       data['children'], data['children_age'])
-    await message.answer("Спасибо за ответы!", reply_markup=keyboard_start)
+    await state.update_data(children_age=message.text)
+    await message.answer("Благодарим за заявку🙏🏻\n"
+                         "Будем рады видеть Вас на мероприятии!\n"
+                         "С Вами свяжется администратор💟")
+
+    await save_data_to_database(state)
     await state.finish()
+
+
+# class AnketForm(StatesGroup):
+#     name = State()
+#     age = State()
+#     theme = State()
+#     children = State()
+#     children_age = State()
+#
+#
+# @dp.message_handler(Text(equals='Хочу на мастер-класс', ignore_case=True))
+# async def course_for_beginners(message: types.Message):
+#     await bot.send_message(message.from_user.id, f'''Давайте знакомиться! ''')
+#     await asyncio.sleep(1)
+#     await bot.send_message(message.from_user.id, f'''Как Вас зовут? (ФИО)''', reply_markup=keyboard_cancel)
+#     await AnketForm.name.set()
+#
+#
+# @dp.message_handler(Text(equals='хочу на мастер-класс', ignore_case=True))
+# async def course_for_beginners_2(message: types.Message):
+#     await bot.send_message(message.from_user.id, f'ФИО', reply_markup=keyboard_cancel)
+#     await AnketForm.name.set()
+#
+#
+# @dp.message_handler(state=AnketForm.name)
+# async def process_name(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#
+#     async with state.proxy() as data:
+#         data['name'] = message.text
+#     await message.answer("Возраст", reply_markup=keyboard_cancel)
+#     await AnketForm.next()
+#
+#
+# @dp.message_handler(state=AnketForm.age)
+# async def process_age(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#
+#     async with state.proxy() as data:
+#         data['age'] = message.text
+#     await message.answer("Желаемая тема мастер-класса", reply_markup=keyboard_cancel)
+#     await AnketForm.next()
+#
+#
+# @dp.message_handler(state=AnketForm.theme)
+# async def process_theme(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#
+#     async with state.proxy() as data:
+#         data['theme'] = message.text
+#     await message.answer("Есть ли у Вас дети?", reply_markup=keyboard_cancel)
+#     await AnketForm.next()
+#
+#
+# @dp.message_handler(state=AnketForm.children)
+# async def process_children(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#
+#     async with state.proxy() as data:
+#         data['children'] = message.text
+#     if data['children'].lower() != 'нет':
+#         await message.answer("Возраст ребенка (детей)", reply_markup=keyboard_cancel)
+#         await AnketForm.next()
+#     else:
+#         await message.answer("Благодарим за заявку🌸")
+#         await state.finish()
+#
+#
+# @dp.message_handler(state=AnketForm.children_age)
+# async def process_children_age(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#
+#     async with state.proxy() as data:
+#         data['children_age'] = message.text
+#         print(data)
+#     orders = Orders()
+#     orders.save_answer(message.from_user.id, message.from_user.username, data['name'], data['age'], data['theme'],
+#                        data['children'], data['children_age'])
+#     await message.answer("Спасибо за ответы!", reply_markup=keyboard_start)
+#     await state.finish()
 
 
 # //////////////////////////////////////////////////////////////////////////////////////
 
 class AnketForm_2(StatesGroup):
     name = State()
-    number = State()
-    email = State()
-    network = State()
-    human = State()
-    theme_2 = State()
-    achievements = State()
-    time = State()
-    tool = State()
-    tools = State()
-    quantity = State()
-    about = State()
+    svr_phone = State()
+    svr_email = State()
+    svr_telegram = State()
+    svr_social = State()
+    activity = State()
+    activity_type_adults = State()
+    activity_type_children = State()
+    master_class_description = State()
+    age_category = State()
+    group_type = State()
+    participant_count = State()
+    free_classes_count = State()
 
 
-# Обработчики состояний для класса Anket_2Form
+# Start conversation
 @dp.message_handler(Text(equals='Заполнить заявку на волонтерство', ignore_case=True))
 async def start_survey(message: types.Message):
-    await bot.send_message(message.from_user.id,
-                           f'Для начала давайте познакомимся немного поближе, как Вас зовут? (ФИО)',
-                           reply_markup=keyboard_cancel)
+    await message.answer("Давайте знакомиться!\nКак Вас зовут? (ФИО)",
+                         reply_markup=keyboard_cancel)
     await AnketForm_2.name.set()
 
 
-@dp.message_handler(Text(equals='заполнить заявку на волонтерство', ignore_case=True))
-async def start_survey_2(message: types.Message):
-    await bot.send_message(message.from_user.id,
-                           f'Для начала давайте познакомимся немного поближе, как Вас зовут? (ФИО)',
-                           reply_markup=keyboard_cancel)
-    await AnketForm_2.name.set()
-
-
+# Asking for name
 @dp.message_handler(state=AnketForm_2.name)
 async def process_name(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
@@ -237,170 +423,420 @@ async def process_name(message: types.Message, state: FSMContext):
         return
     async with state.proxy() as data:
         data['name'] = message.text
-    await message.answer('''Вау, какое красивое имя!🤍
 
-Очень приятно познакомиться🤝
+    await message.answer(f"Какое у Вас красивое имя, {message.text}! Приятно познакомиться!\n"
+                         "Впереди всего 10 вопросов, они пролетят незаметно. Поехали!")
 
-Ответьте пожалуйста всего на 10 вопросов для дальнейшего знакомства!🙏🏻''')
-    await message.answer('''Ваш номер телефона для связи (формат: +79030000009)''', reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+    await message.answer("Напишите Ваш номер телефона для связи (формат: +79030000009).",
+                         reply_markup=keyboard_cancel)
+    await AnketForm_2.svr_phone.set()
 
 
-@dp.message_handler(state=AnketForm_2.number)
-async def process_number(message: types.Message, state: FSMContext):
+# Asking for phone number
+@dp.message_handler(state=AnketForm_2.svr_phone)
+async def process_phone(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['number'] = message.text
-    await message.answer("Электронная почта (формат почты: example@gmail.com)", reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+        data['svr_phone'] = message.text
+
+    await message.answer("А также Вашу электронную почту (Формат почты: example@gmail.com).",
+                         reply_markup=keyboard_cancel)
+    await AnketForm_2.svr_email.set()
 
 
-@dp.message_handler(state=AnketForm_2.email)
+# Asking for email
+@dp.message_handler(state=AnketForm_2.svr_email)
 async def process_email(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['email'] = message.text
-    await message.answer("Ссылки на Ваши соцсети (ник в телеграм, инстаграм, вк, сайт (если есть))",
+        data['svr_email'] = message.text
+
+    await message.answer("Тут просим вписать Ваш ник в телеграм.",
                          reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+    await AnketForm_2.svr_telegram.set()
 
 
-@dp.message_handler(state=AnketForm_2.network)
-async def process_network(message: types.Message, state: FSMContext):
-    if message.text.lower() == "🚫 отмена":
-        await state.finish()
-        await main(message)
-        return
+# Asking for telegram nickname
+@dp.message_handler(state=AnketForm_2.svr_telegram)
+async def process_telegram(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
-        data['network'] = message.text
-    await message.answer("Вы работаете  со  взрослыми  или  детьми?", reply_markup=keyboard_cancel_age)
-    await AnketForm_2.next()
+        data['svr_telegram'] = message.text
 
-
-@dp.message_handler(state=AnketForm_2.human)
-async def process_human(message: types.Message, state: FSMContext):
-    if message.text.lower() == "🚫 отмена":
-        await state.finish()
-        await main(message)
-        return
-
-    if message.text.lower() not in ["взрослые", "дети"]:
-        await message.answer("❌ Ответ не из списка.\n\n🔄 Попробуйте еще раз…", reply_markup=keyboard_cancel_age)
-        await state.set_state(AnketForm_2.human)
-        return
-
-    async with state.proxy() as data:
-        data['human'] = message.text
-    await message.answer('''Каким мастерством Вы владеете? (изобразительное искусство,  психология,  музыка, работа  с телом,   образование, анимация,  живопись,  музыка, произвольный ответ)
-✨
-Какие мастер-классы Вы предлагаете провести?''', reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
-
-
-@dp.message_handler(state=AnketForm_2.theme_2)
-async def process_theme(message: types.Message, state: FSMContext):
-    if message.text.lower() == "🚫 отмена":
-        await state.finish()
-        await main(message)
-        return
-    async with state.proxy() as data:
-        data['theme'] = message.text
-    await message.answer("Ваши регалии (при возможности прикрепите в сообщении дипломы, сертификаты, образование)",
+    await message.answer("По желанию вы можете поделиться ссылками на Ваш проект, сайт или соцсети (вк, сайт).",
                          reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+    await AnketForm_2.svr_social.set()
 
 
-@dp.message_handler(state=AnketForm_2.achievements)
-async def process_achievements(message: types.Message, state: FSMContext):
+# Asking for social links
+@dp.message_handler(state=AnketForm_2.svr_social)
+async def process_social(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['achievements'] = message.text
-    await message.answer("Сколько по времени длится Ваше занятие?", reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+        data['svr_social'] = message.text
 
-
-@dp.message_handler(state=AnketForm_2.time)
-async def process_time(message: types.Message, state: FSMContext):
-    if message.text.lower() == "🚫 отмена":
-        await state.finish()
-        await main(message)
-        return
-    async with state.proxy() as data:
-        data['time'] = message.text
-    await message.answer("Нужны ли какие либо материалы или инструменты для проведения мастер-класса?",
+    await message.answer("Ну а теперь пять вопросов о Вашем участии в благотворительном проекте:",
                          reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+
+    await message.answer("Вы работаете со взрослыми или детьми?", reply_markup=keyboard_age)
+    await AnketForm_2.activity.set()
 
 
-@dp.message_handler(state=AnketForm_2.tool)
-async def process_tool(message: types.Message, state: FSMContext):
+# Asking for activity
+@dp.message_handler(state=AnketForm_2.activity)
+async def process_activity(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['tool'] = message.text
-    await message.answer('''Если Вам необходимы материалы с нашей стороны для проведения мастер-класса, напишите, какие материалы и инструменты нужны для работы✨
-Если нет нужды - ставьте «-»''', reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+        if message.text.lower() == 'взрослые':
+            data['svr_participation'] = 'взрослые'
+            await message.answer("Ваш род деятельности (со взрослыми)?", reply_markup=keyboard_activity)
+            await AnketForm_2.activity_type_adults.set()
+        else:
+            data['svr_participation'] = 'дети'
+            await message.answer("Ваш род деятельности (с детьми)?", reply_markup=keyboard_activity_2)
+            await AnketForm_2.activity_type_children.set()
 
 
-@dp.message_handler(state=AnketForm_2.tools)
-async def process_tools(message: types.Message, state: FSMContext):
+# Asking for activity type with adults
+@dp.message_handler(state=AnketForm_2.activity_type_adults)
+async def process_activity_type_adults(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['tools'] = message.text
-    await message.answer('''Сколько участников может принять ваш мастер-класс?''', reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+        data['activity'] = message.text
+
+    await message.answer("Какие мастер-классы вы предлагаете провести и какие навыки участники смогут получить?",
+                         reply_markup=keyboard_cancel)
+    await AnketForm_2.master_class_description.set()
 
 
-@dp.message_handler(state=AnketForm_2.quantity)
-async def process_quantity(message: types.Message, state: FSMContext):
+# Asking for activity type with children
+@dp.message_handler(state=AnketForm_2.activity_type_children)
+async def process_activity_type_children(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['quantity'] = message.text
-    await message.answer("О себе:", reply_markup=keyboard_cancel)
-    await AnketForm_2.next()
+        data['activity'] = message.text
+
+    await message.answer("Какие мастер-классы вы предлагаете провести и какие навыки участники смогут получить?",
+                         reply_markup=keyboard_cancel)
+    await AnketForm_2.master_class_description.set()
 
 
-@dp.message_handler(state=AnketForm_2.about)
-async def process_about(message: types.Message, state: FSMContext):
+# Asking for master class description
+@dp.message_handler(state=AnketForm_2.master_class_description)
+async def process_master_class_description(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['about'] = message.text
-        print(data)
-    orders = Orders2()
-    # user_id, username, name, number, email, network, theme, achievements, time, tool, tools, quantity, additional_info
-    orders.save_answer(message.from_user.id, message.from_user.username, data['name'], data['number'], data['email'],
-                       data['network'], data['human'], data['theme'], data['achievements'], data['time'], data['tool'],
-                       data['tools'],
-                       data['quantity'], data['about'])
-    await message.answer('''Благодарим за заявку🙏🏻
-Будем рады сотрудничеству🤝
-С Вами свяжется администратор💟''', reply_markup=keyboard_start)
+        data['master_class_description'] = message.text
+
+    await message.answer("Возрастная категория участников?",
+                         reply_markup=keyboard_cancel)
+    await AnketForm_2.age_category.set()
+
+
+# Asking for age category
+@dp.message_handler(state=AnketForm_2.age_category)
+async def process_age_category(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['age_category'] = message.text
+
+    await message.answer("Занятия индивидуальные или групповые?", reply_markup=keyboard_group_type)
+    await AnketForm_2.group_type.set()
+
+
+# Asking for group type
+@dp.message_handler(state=AnketForm_2.group_type)
+async def process_group_type(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['group_type'] = message.text
+
+    await message.answer("Сколько участников может принять ваш мастер-класс?",
+                         reply_markup=keyboard_cancel)
+    await AnketForm_2.participant_count.set()
+
+
+# Asking for participant count
+@dp.message_handler(state=AnketForm_2.participant_count)
+async def process_participant_count(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['participant_count'] = message.text
+
+    await message.answer("Сколько мастер-классов в месяц вы готовы провести на безвозмездной основе?",
+                         reply_markup=keyboard_cancel)
+    await AnketForm_2.free_classes_count.set()
+
+
+# Asking for free classes count
+@dp.message_handler(state=AnketForm_2.free_classes_count)
+async def process_free_classes_count(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['free_classes_count'] = message.text
+
+    # Saving data to the database
+    await save_user_data_2(state)
+
+    # Sending completion message
+    await message.answer("Благодарим за заявку🙏🏻\n"
+                         "Будем рады сотрудничеству🤝\n"
+                         "С Вами свяжется администратор💟")
     await state.finish()
+
+
+# # Обработчики состояний для класса Anket_2Form
+# @dp.message_handler(Text(equals='Заполнить заявку на волонтерство', ignore_case=True))
+# async def start_survey(message: types.Message):
+#     await bot.send_message(message.from_user.id,
+#                            f'Для начала давайте познакомимся немного поближе, как Вас зовут? (ФИО)',
+#                            reply_markup=keyboard_cancel)
+#     await AnketForm_2.name.set()
+#
+#
+# @dp.message_handler(Text(equals='заполнить заявку на волонтерство', ignore_case=True))
+# async def start_survey_2(message: types.Message):
+#     await bot.send_message(message.from_user.id,
+#                            f'Для начала давайте познакомимся немного поближе, как Вас зовут? (ФИО)',
+#                            reply_markup=keyboard_cancel)
+#     await AnketForm_2.name.set()
+#
+#
+# @dp.message_handler(state=AnketForm_2.name)
+# async def process_name(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['name'] = message.text
+#     await message.answer('''Вау, какое красивое имя!🤍
+#
+# Очень приятно познакомиться🤝
+#
+# Ответьте пожалуйста всего на 10 вопросов для дальнейшего знакомства!🙏🏻''')
+#     await message.answer('''Ваш номер телефона для связи (формат: +79030000009)''', reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.number)
+# async def process_number(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['number'] = message.text
+#     await message.answer("Электронная почта (формат почты: example@gmail.com)", reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.email)
+# async def process_email(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['email'] = message.text
+#     await message.answer("Ссылки на Ваши соцсети (ник в телеграм, инстаграм, вк, сайт (если есть))",
+#                          reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.network)
+# async def process_network(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['network'] = message.text
+#     await message.answer("Вы работаете  со  взрослыми  или  детьми?", reply_markup=keyboard_cancel_age)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.human)
+# async def process_human(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#
+#     if message.text.lower() not in ["взрослые", "дети"]:
+#         await message.answer("❌ Ответ не из списка.\n\n🔄 Попробуйте еще раз…", reply_markup=keyboard_cancel_age)
+#         await state.set_state(AnketForm_2.human)
+#         return
+#
+#     async with state.proxy() as data:
+#         data['human'] = message.text
+#     await message.answer('''Каким мастерством Вы владеете? (изобразительное искусство,  психология,  музыка, работа  с телом,   образование, анимация,  живопись,  музыка, произвольный ответ)
+# ✨
+# Какие мастер-классы Вы предлагаете провести?''', reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.theme_2)
+# async def process_theme(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['theme'] = message.text
+#     await message.answer("Ваши регалии (при возможности прикрепите в сообщении дипломы, сертификаты, образование)",
+#                          reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.achievements)
+# async def process_achievements(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['achievements'] = message.text
+#     await message.answer("Сколько по времени длится Ваше занятие?", reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.time)
+# async def process_time(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['time'] = message.text
+#     await message.answer("Нужны ли какие либо материалы или инструменты для проведения мастер-класса?",
+#                          reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.tool)
+# async def process_tool(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['tool'] = message.text
+#     await message.answer('''Если Вам необходимы материалы с нашей стороны для проведения мастер-класса, напишите, какие материалы и инструменты нужны для работы✨
+# Если нет нужды - ставьте «-»''', reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.tools)
+# async def process_tools(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['tools'] = message.text
+#     await message.answer('''Сколько участников может принять ваш мастер-класс?''', reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.quantity)
+# async def process_quantity(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['quantity'] = message.text
+#     await message.answer("О себе:", reply_markup=keyboard_cancel)
+#     await AnketForm_2.next()
+#
+#
+# @dp.message_handler(state=AnketForm_2.about)
+# async def process_about(message: types.Message, state: FSMContext):
+#     if message.text.lower() == "🚫 отмена":
+#         await state.finish()
+#         await main(message)
+#         return
+#     async with state.proxy() as data:
+#         data['about'] = message.text
+#         print(data)
+#     orders = Orders2()
+#     # user_id, username, name, number, email, network, theme, achievements, time, tool, tools, quantity, additional_info
+#     orders.save_answer(message.from_user.id, message.from_user.username, data['name'], data['number'], data['email'],
+#                        data['network'], data['human'], data['theme'], data['achievements'], data['time'], data['tool'],
+#                        data['tools'],
+#                        data['quantity'], data['about'])
+#     await message.answer('''Благодарим за заявку🙏🏻
+# Будем рады сотрудничеству🤝
+# С Вами свяжется администратор💟''', reply_markup=keyboard_start)
+#     await state.finish()
+
+
+async def save_data_to_database(state: FSMContext):
+    async with state.proxy() as data:
+        conn = sqlite3.connect('my_db_path.db')
+        cursor = conn.cursor()
+        cursor.execute('''INSERT INTO answers (name, svr_participation, svr_phone, svr_email, svr_telegram, 
+                           svr_social, children, children_number, children_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                       (data['name'], data['svr_participation'], data['svr_phone'], data['svr_email'],
+                        data['svr_telegram'], data['svr_social'], data['children'], data['children_number'],
+                        data['children_age']))
+        conn.commit()
+        conn.close()
+
+
+async def save_user_data_2(state: FSMContext):
+    async with state.proxy() as data:
+        conn = sqlite3.connect('my_db_path_2.db')
+        cursor = conn.cursor()
+        cursor.execute('''INSERT INTO users 
+                          (name, svr_phone, svr_email, svr_telegram, svr_social, 
+                           activity, master_class_description, age_category, group_type,
+                           participant_count, free_classes_count) 
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                       (data['name'], data['svr_phone'], data['svr_email'], data['svr_telegram'], data['svr_social'],
+                        data['activity'], data['master_class_description'],
+                        data['age_category'], data['group_type'], data['participant_count'],
+                        data['free_classes_count']))
+        conn.commit()
+        conn.close()
 
 
 def handlers_register(dp: Dispatcher):
     dp.register_message_handler(start_bot, commands=['start', 'help'])
     dp.register_message_handler(start_survey, commands=['volunteering'])
-    dp.register_message_handler(course_for_beginners, commands=['master_class'])
+    dp.register_message_handler(start_survey_22, commands=['master_class'])
     dp.register_message_handler(get_contacts, commands=['networks'])
+    dp.register_message_handler(get_contact, commands=['care_service'])

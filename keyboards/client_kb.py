@@ -28,7 +28,6 @@ keyboard_start_2.add(button1_start_2)
 keyboard_start_2.add(button2_start_2)
 keyboard_start_2.add(button3_start_2)
 
-
 keyboard_cancel = ReplyKeyboardMarkup(resize_keyboard=True)
 
 # Добавляем кнопки на клавиатуру
@@ -45,3 +44,62 @@ button3_cancel_age = KeyboardButton(text="🚫 Отмена")
 
 # Добавляем кнопки на клавиатуру в виде списка
 keyboard_cancel_age.add(button1_cancel_age).add(button2_cancel_age).add(button3_cancel_age)
+
+keyboard_yes_no = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Да")],
+        [KeyboardButton(text="Нет")],
+        [KeyboardButton(text="🚫 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+keyboard_age = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Взрослые")],
+        [KeyboardButton(text="Дети")],
+        [KeyboardButton(text="🚫 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+# Keyboard layout for selecting number of children
+keyboard_children_number = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="1")],
+        [KeyboardButton(text="2")],
+        [KeyboardButton(text="3")],
+        [KeyboardButton(text="4-5")],
+        [KeyboardButton(text="🚫 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+keyboard_activity = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Изобразительное искусство"), KeyboardButton(text="Психология")],
+        [KeyboardButton(text="Музыка"), KeyboardButton(text="Работа с телом")],
+        [KeyboardButton(text="Образование"), KeyboardButton(text="🚫 Отмена")],
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+keyboard_activity_2 = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Анимация"), KeyboardButton(text="Живопись")],
+        [KeyboardButton(text="Музыка"), KeyboardButton(text="Образование")],
+        [KeyboardButton(text="🚫 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+
+keyboard_group_type = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="Индивидуальные"), KeyboardButton(text="Групповые")],
+        [KeyboardButton(text="Индивидуальные и групповые")],
+        [KeyboardButton(text="🚫 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)

@@ -11,15 +11,17 @@ class Orders:
         self.cursor = self.connection.cursor()
         self.cursor.execute('''
         CREATE TABLE IF NOT EXISTS answers (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id INTEGER NOT NULL,
-            username TEXT NOT NULL,
+            id INTEGER PRIMARY KEY,
+            username TEXT,
             name TEXT,
-            age INTEGER,
-            theme TEXT,
+            svr_participation TEXT,
+            svr_phone TEXT,
+            svr_email TEXT,
+            svr_telegram TEXT,
+            svr_social TEXT,
             children TEXT,
-            children_age TEXT,
-            date TEXT
+            children_number TEXT,
+            children_age TEXT
         )
         ''')
         self.connection.commit()
@@ -28,7 +30,17 @@ class Orders:
         self.connection = sqlite3.connect("my_db_path.db")
         self.cursor = self.connection.cursor()
         self.cursor.execute(
-            "INSERT INTO answers (user_id, username, name, age, theme, children, children_age, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            "INSERT INTO answers (user_id, username, name, theme, children, children_age, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+            (user_id, username, name, theme, children, children_age, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
+        self.connection.commit()
+        self.cursor.close()
+        self.connection.close()
+
+    def save_answers(self, user_id, username, name, age, theme, children, children_age):
+        self.connection = sqlite3.connect("my_db_path.db")
+        self.cursor = self.connection.cursor()
+        self.cursor.execute(
+            "INSERT INTO answers (user_id, username, name, children, children_age, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
             (user_id, username, name, age, theme, children, children_age, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
         self.connection.commit()
         self.cursor.close()
@@ -46,23 +58,20 @@ class Orders2:
         # Создание подключения к базе данных
         self.connection = sqlite3.connect("my_db_path_2.db")
         self.cursor = self.connection.cursor()
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS answers
-             (id INTEGER PRIMARY KEY AUTOINCREMENT,
-             user_id TEXT,
-             username TEXT,
-             name TEXT,
-             number TEXT,
-             email TEXT,
-             network TEXT,
-             human TEXT,
-             theme TEXT,
-             achievements TEXT,
-             time TEXT,
-             tool TEXT,
-             tools TEXT,
-             quantity TEXT,
-             about TEXT,
-             date)''')
+        self.cursor.execute('''
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            svr_phone TEXT,
+            svr_email TEXT,
+            svr_telegram TEXT,
+            svr_social TEXT,
+            activity TEXT,
+            master_class_description TEXT,
+            age_category TEXT,
+            group_type TEXT,
+            participant_count TEXT,
+            free_classes_count TEXT)''')
         self.connection.commit()
 
     def save_answer(self, user_id, username, name, number, email, network, human, theme, achievements, time, tool,
@@ -84,4 +93,4 @@ class Orders2:
         return self.cursor.fetchall()
 
 
-
+Orders2()

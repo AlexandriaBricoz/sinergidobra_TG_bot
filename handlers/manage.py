@@ -45,7 +45,7 @@ class FSMteacher(StatesGroup):
 async def verify_owner(message: types.Message):
     id_check = message.from_user.id
     if id_check in ID_MASTER:
-        await bot.send_message(message.from_user.id, 'Готов к работе, пожалуйста выбери команды на клавиатуре',
+        await bot.send_message(message.from_user.id, 'Готов к работе, пожалуйста выберите команды на клавиатуре',
                                reply_markup=kb_manage_3)
     else:
         await bot.send_message(message.from_user.id, 'Доступ запрещен')
