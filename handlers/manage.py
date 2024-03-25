@@ -89,7 +89,8 @@ async def output_pay(message: types.Message):
                 i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8]
             ])
         df = pd.DataFrame(data,
-                          columns=['id', 'user_id', 'username', 'name', 'age', 'theme', 'children', 'children_age',
+                          columns=['id', 'user_id', 'username', 'ФИО', 'Возраст', 'Желаемая тема мастер-класса',
+                                   'Есть ли у Вас дети?', 'Возраст ребенка (детей)',
                                    'дата'])
         buffer = io.BytesIO()
         buffer.name = 'Заявки на мастер-класс.xlsx'

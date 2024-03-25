@@ -84,5 +84,4 @@ class Orders2:
         return self.cursor.fetchall()
 
 
-Orders()
-Orders2()
+
