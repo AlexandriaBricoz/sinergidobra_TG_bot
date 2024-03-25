@@ -402,6 +402,10 @@ async def process_activity(message: types.Message, state: FSMContext):
         await state.finish()
         await main(message)
         return
+    if message.text.lower() not in ["взрослые", "дети"]:
+        await message.answer("❌ Ответ не из списка.\n\n🔄 Попробуйте еще раз…", reply_markup=keyboard_age)
+        await state.set_state(AnketForm_2.activity)
+        return
     async with state.proxy() as data:
         if message.text.lower() == 'взрослые':
             data['svr_participation'] = 'взрослые'
