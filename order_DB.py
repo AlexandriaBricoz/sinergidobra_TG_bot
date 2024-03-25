@@ -1,5 +1,4 @@
 import sqlite3
-from datetime import datetime
 
 
 class Orders:
@@ -25,26 +24,6 @@ class Orders:
         )
         ''')
         self.connection.commit()
-
-    def save_answer(self, user_id, username, name, age, theme, children, children_age):
-        self.connection = sqlite3.connect("my_db_path.db")
-        self.cursor = self.connection.cursor()
-        self.cursor.execute(
-            "INSERT INTO answers (user_id, username, name, theme, children, children_age, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (user_id, username, name, theme, children, children_age, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-        self.connection.commit()
-        self.cursor.close()
-        self.connection.close()
-
-    def save_answers(self, user_id, username, name, age, theme, children, children_age):
-        self.connection = sqlite3.connect("my_db_path.db")
-        self.cursor = self.connection.cursor()
-        self.cursor.execute(
-            "INSERT INTO answers (user_id, username, name, children, children_age, date) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (user_id, username, name, age, theme, children, children_age, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-        self.connection.commit()
-        self.cursor.close()
-        self.connection.close()
 
     def get_all_orders(self):
         self.cursor.execute("SELECT * FROM answers")
@@ -74,22 +53,8 @@ class Orders2:
             free_classes_count TEXT)''')
         self.connection.commit()
 
-    def save_answer(self, user_id, username, name, number, email, network, human, theme, achievements, time, tool,
-                    tools,
-                    quantity, about):
-        self.connection = sqlite3.connect("my_db_path_2.db")
-        self.cursor = self.connection.cursor()
-        self.cursor.execute(
-            '''INSERT INTO answers (user_id, username, name, number, email, network, human, theme, achievements, time, tool, tools, quantity, about, date)
-              VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-            (user_id, username, name, number, email, network, human, theme, achievements, time, tool, tools, quantity,
-             about, datetime.now().strftime('%Y-%m-%d %H:%M:%S')))
-        self.connection.commit()
-        self.cursor.close()
-        self.connection.close()
-
     def get_all_orders(self):
-        self.cursor.execute("SELECT * FROM answers")
+        self.cursor.execute("SELECT * FROM users")
         return self.cursor.fetchall()
 
 

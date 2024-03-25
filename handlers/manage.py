@@ -52,8 +52,8 @@ async def verify_owner(message: types.Message):
     await message.delete()
 
 
-# @dp.message_handler(commands=['Ученики'])
-async def output_users(message: types.Message):
+# @dp.message_handler(commands=['Заявки на мастер-класс'])
+async def output_pay(message: types.Message):
     id_check = message.from_user.id
     if id_check in ID_MASTER:
         orders = Orders2()
@@ -61,41 +61,46 @@ async def output_users(message: types.Message):
         for i in orders.get_all_orders():
             print(i)
             data.append([
-                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12], i[13], i[14], i[15]
+                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11]
             ])
-        df = pd.DataFrame(data, columns=['id', 'user_id', 'username', 'ФИО', 'Номер телефона', 'email', 'контакты',
-                                         'С кем работаете?', 'Тема мастер-класса',
-                                         'Регалии', 'Сколько по времени длится занятие?', 'Нужны ли инструменты?',
-                                         'Инструменты', 'Максимальное количество учеников', 'О себе', 'дата'])
+        df = pd.DataFrame(data, columns=['id', 'user_id', 'username', 'ФИО', 'Участвует ли член вашей семьи в СВО?',
+                                         'Номер телефона',
+                                         'Электронную почта', 'Ник в телеграм',
+                                         'Соцсети', 'Есть ли дети?', 'Сколько детей', 'Возраст детей'])
         buffer = io.BytesIO()
-        buffer.name = 'Заявки на волонтёрство.xlsx'
+        buffer.name = 'Заявки на мастер-класс.xlsx'
         with pd.ExcelWriter(buffer) as writer:
-            df.to_excel(excel_writer=writer, sheet_name='Заявки на волонтёрство', engine='xlsxwriter')
+            df.to_excel(excel_writer=writer, sheet_name='Заявки на мастер-класс', engine='xlsxwriter')
         buffer.seek(0)
+
         await bot.send_document(message.from_user.id, document=buffer)
     else:
         await bot.send_message(message.from_user.id, 'Доступ запрещен')
     await message.delete()
 
 
-# @dp.message_handler(commands=['Платежи'])
-async def output_pay(message: types.Message):
+# @dp.message_handler(commands=['Заявки на волонтёрство'])
+async def output_users(message: types.Message):
     id_check = message.from_user.id
     orders = Orders()
     if id_check in ID_MASTER:
         data = []
         for i in orders.get_all_orders():
             data.append([
-                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8]
+                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12], i[13], i[14]
             ])
         df = pd.DataFrame(data,
-                          columns=['id', 'user_id', 'username', 'ФИО', 'Возраст', 'Желаемая тема мастер-класса',
-                                   'Есть ли у Вас дети?', 'Возраст ребенка (детей)',
-                                   'дата'])
+                          columns=['id', 'user_id', 'username', 'ФИО',
+                                   'Номер телефона',
+                                   'Электронную почта', 'Ник в телеграм',
+                                   'Соцсети', 'Работаете со взрослыми или детьми?', 'Род деятельности',
+                                   'О мастер-классе', 'Возрастная категория',
+                                   'Индивидуальные или групповые', 'Количество участников',
+                                   'Количество бесплатных мастер-классов в месяц'])
         buffer = io.BytesIO()
-        buffer.name = 'Заявки на мастер-класс.xlsx'
+        buffer.name = 'Заявки на волонтёрство.xlsx'
         with pd.ExcelWriter(buffer) as writer:
-            df.to_excel(excel_writer=writer, sheet_name='Заявки на мастер-класс', engine='xlsxwriter')
+            df.to_excel(excel_writer=writer, sheet_name='Заявки на волонтёрство', engine='xlsxwriter')
         buffer.seek(0)
         await bot.send_document(message.from_user.id, document=buffer)
     else:
