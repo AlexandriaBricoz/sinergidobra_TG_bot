@@ -1,3 +1,4 @@
+import re
 import sqlite3
 
 from aiogram import types, Dispatcher
@@ -7,12 +8,15 @@ from aiogram.types import ReplyKeyboardRemove
 
 from create_bot import bot, dp
 from keyboards.client_kb import keyboard_next, keyboard_start_2, keyboard_cancel, keyboard_yes_no, \
-    keyboard_children_number, keyboard_group_type, keyboard_activity, keyboard_age, keyboard_activity_2
+    keyboard_children_number, keyboard_group_type, keyboard_activity, keyboard_age, keyboard_activity_2, keyboard_young, \
+    keyboard_old
 from loging import printl
 
 """Хендлеры для взаимодействия с клиентом
 
     group_id:-1002030571529
+    
+    870903130 Старухина Анна arumitapro
     
     Иван Неретин 1085385124
 """
@@ -20,33 +24,57 @@ from loging import printl
 from aiogram.dispatcher.filters.state import StatesGroup, State
 
 
+# Функция для проверки валидности ФИО
+def is_valid_name(name):
+    # Паттерн для проверки ФИО: только буквы и пробелы, как минимум два слова
+    pattern = r'^[a-zA-Zа-яА-ЯёЁ]+\s[a-zA-Zа-яА-ЯёЁ]+(\s[a-zA-Zа-яА-ЯёЁ]+)?$'
+    return bool(re.match(pattern, name))
+
+
+# Функция для проверки валидности номера телефона
+def is_valid_phone(phone):
+    # Паттерн для проверки номера телефона в формате +7XXXXXXXXXX или 8XXXXXXXXXX
+    pattern = r'^(?:\+7|8)\d{10}$'
+    return bool(re.match(pattern, phone))
+
+
+# Функция для проверки валидности email
+def is_valid_email(email):
+    # Паттерн для проверки email
+    pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+    return bool(re.match(pattern, email))
+
+
 @dp.message_handler(commands=['start', 'help'])
 async def start_bot(message: types.Message):
     print(message.from_user.id, message.from_user.full_name, message.from_user.username)
     printl(message.from_user.id, message.from_user.full_name, message.from_user.username)
     photo = open('photo_2024-03-23 20.04.59.jpeg', 'rb')
-    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''Синергия добра приветсвует Вас. 
+    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''<b>Синергия добра</b> приветсвует Вас. 
 Мы создаем сообщество, в котором объединяем людей, желающих поддержать женщин и детей наших бойцов.
-''')
+''', parse_mode=types.ParseMode.HTML)
     await bot.send_message(message.from_user.id,
-                           f'''Я виртуалтный помощник Синергии добра! Чтобы добавить Вас в наше сообщество , задам несколько вопросов, это займет у вас не более 5 минут. ''',
+                           f'''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут. ''',
+                           parse_mode=types.ParseMode.HTML,
                            reply_markup=ReplyKeyboardRemove())
     await bot.send_message(message.from_user.id,
-                           f'''Приветствуем вас! Пожалуйста, ознакомьтесь с нашими правилами использования перед тем, как продолжить:
+                           f'''Пожалуйста, ознакомьтесь с нашими правилами использования перед тем, как продолжить:
 https://sinergidobra.ru/privacy
                            
 Если вы продолжаете, вы подтверждаете, что ознакомились с нашим пользовательским соглашением и согласны с его условиями.''',
+                           parse_mode=types.ParseMode.HTML,
                            reply_markup=keyboard_next)
 
 
 @dp.message_handler(Text(equals='🔝 Главное Меню', ignore_case=True))
 async def main(message: types.Message):
     photo = open('photo_2024-03-23 20.04.59.jpeg', 'rb')
-    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''Синергия добра приветсвует Вас. 
-    Мы создаем сообщество, в котором объединяем людей, желающих поддержать женщин и детей наших бойцов.
-    ''')
+    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''<b>Синергия добра</b> приветсвует Вас. 
+Мы создаем сообщество, в котором объединяем людей, желающих поддержать женщин и детей наших бойцов.
+    ''', parse_mode=types.ParseMode.HTML, )
     await bot.send_message(message.from_user.id,
-                           f'''Я виртуалтный помощник Синергии добра! Чтобы добавить Вас в наше сообщество , задам несколько вопросов, это займет у вас не более 5 минут. ''',
+                           f'''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут.''',
+                           parse_mode=types.ParseMode.HTML,
                            reply_markup=keyboard_start_2)
 
 
@@ -115,6 +143,13 @@ async def start_survey_22(message: types.Message):
     await AnketForm.name.set()
 
 
+@dp.message_handler(Text(equals='xочу на мастер-класс', ignore_case=True))
+async def start_survey_222(message: types.Message):
+    await bot.send_message(message.from_user.id, "Давайте знакомиться!\nКак Вас зовут? (ФИО)",
+                           reply_markup=keyboard_cancel)
+    await AnketForm.name.set()
+
+
 # Asking for name
 @dp.message_handler(state=AnketForm.name)
 async def process_name(message: types.Message, state: FSMContext):
@@ -135,9 +170,15 @@ async def process_name(message: types.Message, state: FSMContext):
         await main(message)
         return
 
+    if not is_valid_name(message.text.lower()):
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=ReplyKeyboardRemove())
+        await state.set_state(AnketForm.name)
+        return
+
     await state.update_data(name=message.text)
-    await bot.send_message(message.from_user.id, f"Какое у Вас красивое имя, {message.text}! Приятно познакомиться!\n"
-                                                 "Впереди несколько вопросов, они пролетят незаметно. Поехали!")
+    await bot.send_message(message.from_user.id,
+                           f"Какое у Вас красивое имя, {message.text.split()[1]}! Приятно познакомиться!\n"
+                           "Впереди несколько вопросов, они пролетят незаметно. Поехали!")
 
     await bot.send_message(message.from_user.id, "Участвует ли член вашей семьи в СВО?", reply_markup=keyboard_yes_no)
     await AnketForm.next()
@@ -168,8 +209,9 @@ async def process_svr_participation(message: types.Message, state: FSMContext):
                              reply_markup=keyboard_cancel)
         await AnketForm.svr_phone.set()
     else:
-        await save_data_to_database(state)
-        await message.answer("Благодарим за заявку! 🌸")
+        await save_data_to_database(state, message)
+        await message.answer('''Благодарим за заявку! 🌸
+В таком случае Вы можете поучаствовать в проекте в качестве волонтера. У Вас есть возможность заполнить заявку на волонтера.''')
         await state.finish()
 
 
@@ -179,6 +221,10 @@ async def process_svr_phone(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
+        return
+    if not is_valid_phone(message.text.lower()):
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=ReplyKeyboardRemove())
+        await state.set_state(AnketForm.svr_phone)
         return
     async with state.proxy() as data:
         data['svr_phone'] = message.text
@@ -194,6 +240,10 @@ async def process_svr_email(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
+        return
+    if not is_valid_email(message.text.lower()):
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=keyboard_cancel)
+        await state.set_state(AnketForm.svr_email)
         return
     async with state.proxy() as data:
         data['svr_email'] = message.text
@@ -254,7 +304,7 @@ async def process_children(message: types.Message, state: FSMContext):
         await message.answer("Сколько у вас детей?", reply_markup=keyboard_children_number)
         await AnketForm.children_number.set()
     else:
-        await save_data_to_database(state)
+        await save_data_to_database(state, message)
         await message.answer("Благодарим за заявку! 🌸")
         await state.finish()
 
@@ -271,7 +321,7 @@ async def process_children_number(message: types.Message, state: FSMContext):
         data['children_number'] = message.text
 
     await state.update_data(children_number=message.text)
-    await message.answer("Возраст детей?")
+    await message.answer("Возраст детей?(последовательно через запятую)")
     await AnketForm.children_age.set()
 
 
@@ -289,7 +339,7 @@ async def process_children_age(message: types.Message, state: FSMContext):
                          "Будем рады видеть Вас на мероприятии!\n"
                          "С Вами свяжется администратор💟")
 
-    await save_data_to_database(state)
+    await save_data_to_database(state, message)
     await state.finish()
 
 
@@ -319,6 +369,13 @@ async def start_survey(message: types.Message):
     await AnketForm_2.name.set()
 
 
+@dp.message_handler(Text(equals='заполнить заявку на волонтерство', ignore_case=True))
+async def start_survey33(message: types.Message):
+    await bot.send_message(message.from_user.id, "Давайте знакомиться!\nКак Вас зовут? (ФИО)",
+                           reply_markup=keyboard_cancel)
+    await AnketForm_2.name.set()
+
+
 # Asking for name
 @dp.message_handler(state=AnketForm_2.name)
 async def process_name(message: types.Message, state: FSMContext):
@@ -326,10 +383,16 @@ async def process_name(message: types.Message, state: FSMContext):
         await state.finish()
         await main(message)
         return
+
+    if not is_valid_name(message.text.lower()):
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=keyboard_cancel)
+        await state.set_state(AnketForm_2.name)
+        return
+
     async with state.proxy() as data:
         data['name'] = message.text
 
-    await message.answer(f"Какое у Вас красивое имя, {message.text}! Приятно познакомиться!\n"
+    await message.answer(f"Какое у Вас красивое имя, {message.text.split()[1]}! Приятно познакомиться!\n"
                          "Впереди всего 10 вопросов, они пролетят незаметно. Поехали!")
 
     await message.answer("Напишите Ваш номер телефона для связи (формат: +79030000009).",
@@ -343,7 +406,12 @@ async def process_phone(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
+
+    if not is_valid_phone(message.text.lower()):
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=keyboard_cancel)
+        await state.set_state(AnketForm_2.svr_phone)
         return
+
     async with state.proxy() as data:
         data['svr_phone'] = message.text
 
@@ -358,6 +426,10 @@ async def process_email(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
+        return
+    if not is_valid_email(message.text.lower()):
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=keyboard_cancel)
+        await state.set_state(AnketForm_2.svr_email)
         return
     async with state.proxy() as data:
         data['svr_email'] = message.text
@@ -427,7 +499,9 @@ async def process_activity_type_adults(message: types.Message, state: FSMContext
     async with state.proxy() as data:
         data['activity'] = message.text
 
-    await message.answer("Какие мастер-классы вы предлагаете провести и какие навыки участники смогут получить?",
+    await message.answer('''Какие мастер-классы вы предлагаете провести и какие навыки участники смогут получить?
+    
+Совсем коротко опишите что вы делаете на ваших занятиях. Чтобы нам лучше узнать ваше направление.''',
                          reply_markup=keyboard_cancel)
     await AnketForm_2.master_class_description.set()
 
@@ -456,9 +530,12 @@ async def process_master_class_description(message: types.Message, state: FSMCon
         return
     async with state.proxy() as data:
         data['master_class_description'] = message.text
-
-    await message.answer("Возрастная категория участников?",
-                         reply_markup=keyboard_cancel)
+        if data['svr_participation'] == 'взрослые':
+            await message.answer("Возрастная категория участников?",
+                                 reply_markup=keyboard_old)
+        else:
+            await message.answer("Возрастная категория участников?",
+                                 reply_markup=keyboard_young)
     await AnketForm_2.age_category.set()
 
 
@@ -485,10 +562,15 @@ async def process_group_type(message: types.Message, state: FSMContext):
         return
     async with state.proxy() as data:
         data['group_type'] = message.text
-
-    await message.answer("Сколько участников может принять ваш мастер-класс?",
-                         reply_markup=keyboard_cancel)
-    await AnketForm_2.participant_count.set()
+        if data['group_type'].lower() == 'индивидуальные':
+            data['participant_count'] = '1'
+            await message.answer("Сколько мастер-классов в месяц вы готовы провести на безвозмездной основе?",
+                                 reply_markup=keyboard_cancel)
+            await AnketForm_2.free_classes_count.set()
+        else:
+            await message.answer("Сколько участников может принять ваш мастер-класс?",
+                                 reply_markup=keyboard_cancel)
+            await AnketForm_2.participant_count.set()
 
 
 # Asking for participant count
@@ -517,7 +599,7 @@ async def process_free_classes_count(message: types.Message, state: FSMContext):
         data['free_classes_count'] = message.text
 
     # Saving data to the database
-    await save_user_data_2(state)
+    await save_user_data_2(state, message)
 
     # Sending completion message
     await message.answer("Благодарим за заявку🙏🏻\n"
@@ -526,29 +608,31 @@ async def process_free_classes_count(message: types.Message, state: FSMContext):
     await state.finish()
 
 
-async def save_data_to_database(state: FSMContext):
+async def save_data_to_database(state: FSMContext, message):
     async with state.proxy() as data:
         conn = sqlite3.connect('my_db_path.db')
         cursor = conn.cursor()
-        cursor.execute('''INSERT INTO answers (name, svr_participation, svr_phone, svr_email, svr_telegram, 
-                           svr_social, children, children_number, children_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                       (data['name'], data['svr_participation'], data['svr_phone'], data['svr_email'],
+        cursor.execute('''INSERT INTO answers (user_id, nik_name, full_name, name, svr_participation, svr_phone, svr_email, svr_telegram, 
+                           svr_social, children, children_number, children_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                       (message.from_user.id, message.from_user.username, message.from_user.full_name, data['name'],
+                        data['svr_participation'], data['svr_phone'], data['svr_email'],
                         data['svr_telegram'], data['svr_social'], data['children'], data['children_number'],
                         data['children_age']))
         conn.commit()
         conn.close()
 
 
-async def save_user_data_2(state: FSMContext):
+async def save_user_data_2(state: FSMContext, message):
     async with state.proxy() as data:
         conn = sqlite3.connect('my_db_path_2.db')
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO users 
-                          (name, svr_phone, svr_email, svr_telegram, svr_social, svr_participation,
+                          (user_id, nik_name, full_name, name, svr_phone, svr_email, svr_telegram, svr_social, svr_participation,
                            activity, master_class_description, age_category, group_type,
                            participant_count, free_classes_count) 
-                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
-                       (data['name'], data['svr_phone'], data['svr_email'], data['svr_telegram'], data['svr_social'],
+                          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                       (message.from_user.id, message.from_user.username, message.from_user.full_name, data['name'],
+                        data['svr_phone'], data['svr_email'], data['svr_telegram'], data['svr_social'],
                         data['svr_participation'],
                         data['activity'], data['master_class_description'],
                         data['age_category'], data['group_type'], data['participant_count'],

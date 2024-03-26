@@ -61,9 +61,9 @@ async def output_pay(message: types.Message):
         for i in orders.get_all_orders():
             print(i)
             data.append([
-                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10]
+                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12]
             ])
-        df = pd.DataFrame(data, columns=['id', 'user_id',  'ФИО', 'Участвует ли член вашей семьи в СВО?',
+        df = pd.DataFrame(data, columns=['id', 'user_id', 'nik_name', 'full_name', 'ФИО', 'Участвует ли член вашей семьи в СВО?',
                                          'Номер телефона',
                                          'Электронную почта', 'Ник в телеграм',
                                          'Соцсети', 'Есть ли дети?', 'Сколько детей', 'Возраст детей'])
@@ -86,12 +86,12 @@ async def output_users(message: types.Message):
     if id_check in ID_MASTER:
         data = []
         for i in orders.get_all_orders():
-            print('sfvfdv    ',i)
+            print('sfvfdv    ', i)
             data.append([
-                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12]
+                i[0], i[1], i[2], i[3], i[4], i[5], i[6], i[7], i[8], i[9], i[10], i[11], i[12], i[13], i[14], i[15]
             ])
         df = pd.DataFrame(data,
-                          columns=['id', 'ФИО',
+                          columns=['id', 'user_id', 'nik_name', 'full_name', 'ФИО',
                                    'Номер телефона',
                                    'Электронную почта', 'Ник в телеграм',
                                    'Соцсети', 'Работаете со взрослыми или детьми?', 'Род деятельности',

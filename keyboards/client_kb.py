@@ -19,12 +19,10 @@ keyboard_next.add(button1_next)
 
 keyboard_start_2 = InlineKeyboardMarkup()
 
-button1_start_2 = InlineKeyboardButton(text="Соцсети проекта", callback_data="Соцсети проекта")
 button2_start_2 = InlineKeyboardButton(text="Хочу на мастер-класс", callback_data="Хочу на мастер-класс")
 button3_start_2 = InlineKeyboardButton(text="Заполнить заявку на волонтерство",
                                        callback_data="Заполнить заявку на волонтерство")
 # Добавляем кнопки на клавиатуру в виде списка
-keyboard_start_2.add(button1_start_2)
 keyboard_start_2.add(button2_start_2)
 keyboard_start_2.add(button3_start_2)
 
@@ -58,6 +56,26 @@ keyboard_age = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="Взрослые")],
         [KeyboardButton(text="Дети")],
+        [KeyboardButton(text="🚫 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+keyboard_old = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="18-44")],
+        [KeyboardButton(text="45-59")],
+        [KeyboardButton(text="60-74")],
+        [KeyboardButton(text="🚫 Отмена")]
+    ],
+    resize_keyboard=True,
+    one_time_keyboard=True
+)
+keyboard_young = ReplyKeyboardMarkup(
+    keyboard=[
+        [KeyboardButton(text="0-7")],
+        [KeyboardButton(text="8-12")],
+        [KeyboardButton(text="13-18")],
         [KeyboardButton(text="🚫 Отмена")]
     ],
     resize_keyboard=True,

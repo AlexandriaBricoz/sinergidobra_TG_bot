@@ -11,7 +11,9 @@ class Orders:
         self.cursor.execute('''
         CREATE TABLE IF NOT EXISTS answers (
             id INTEGER PRIMARY KEY,
-            username TEXT,
+            user_id TEXT, 
+            nik_name TEXT, 
+            full_name TEXT,
             name TEXT,
             svr_participation TEXT,
             svr_phone TEXT,
@@ -40,6 +42,9 @@ class Orders2:
         self.cursor.execute('''
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id TEXT, 
+            nik_name TEXT, 
+            full_name TEXT,
             name TEXT,
             svr_phone TEXT,
             svr_email TEXT,
