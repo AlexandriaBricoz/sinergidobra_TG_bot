@@ -9,7 +9,7 @@ from aiogram.types import ReplyKeyboardRemove
 from create_bot import bot, dp
 from keyboards.client_kb import keyboard_next, keyboard_start_2, keyboard_cancel, keyboard_yes_no, \
     keyboard_children_number, keyboard_group_type, keyboard_activity, keyboard_age, keyboard_activity_2, keyboard_young, \
-    keyboard_old
+    keyboard_old, keyboard_v
 from loging import printl
 
 """Хендлеры для взаимодействия с клиентом
@@ -17,6 +17,8 @@ from loging import printl
     group_id:-1002030571529
     
     870903130 Старухина Анна arumitapro
+    
+    6532995976 Синергия Добра synergidobra
     
     Иван Неретин 1085385124
 """
@@ -50,33 +52,33 @@ async def start_bot(message: types.Message):
     print(message.from_user.id, message.from_user.full_name, message.from_user.username)
     printl(message.from_user.id, message.from_user.full_name, message.from_user.username)
     photo = open('photo_2024-03-23 20.04.59.jpeg', 'rb')
-    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''<b>Синергия добра</b> приветсвует Вас. 
+    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''<b>Синергия добра</b> приветствует Вас. 
 Мы создаем сообщество, в котором объединяем людей, желающих поддержать женщин и детей наших бойцов.
 ''', parse_mode=types.ParseMode.HTML)
     await bot.send_message(message.from_user.id,
                            f'''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут. ''',
                            parse_mode=types.ParseMode.HTML,
-                           reply_markup=ReplyKeyboardRemove())
-    await bot.send_message(message.from_user.id,
-                           f'''Пожалуйста, ознакомьтесь с нашими правилами использования перед тем, как продолжить:
-https://sinergidobra.ru/privacy
-                           
-Если вы продолжаете, вы подтверждаете, что ознакомились с нашим пользовательским соглашением и согласны с его условиями.''',
-                           parse_mode=types.ParseMode.HTML,
-                           reply_markup=keyboard_next)
+                           reply_markup=keyboard_next) #ReplyKeyboardRemove
+#     await bot.send_message(message.from_user.id,
+#                            f'''Пожалуйста, ознакомьтесь с нашими правилами использования перед тем, как продолжить:
+# https://sinergidobra.ru/privacy
+#
+# Если вы продолжаете, вы подтверждаете, что ознакомились с нашим пользовательским соглашением и согласны с его условиями.''',
+#                            parse_mode=types.ParseMode.HTML,
+#                            reply_markup=keyboard_next)
 
 
 @dp.message_handler(Text(equals='🔝 Главное Меню', ignore_case=True))
 async def main(message: types.Message):
     photo = open('photo_2024-03-23 20.04.59.jpeg', 'rb')
-    await bot.send_photo(message.from_user.id, photo=photo, caption=f'''<b>Синергия добра</b> приветсвует Вас. 
-Мы создаем сообщество, в котором объединяем людей, желающих поддержать женщин и детей наших бойцов.
-    ''', parse_mode=types.ParseMode.HTML, )
-    await bot.send_message(message.from_user.id,
-                           f'''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут.''',
+    await bot.send_photo(message.from_user.id, photo=photo, caption='''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут. ''',
                            parse_mode=types.ParseMode.HTML,
-                           reply_markup=keyboard_start_2)
+                           reply_markup=ReplyKeyboardRemove())
+    await bot.send_message(message.from_user.id,
+                           f'''Если Вы хотите заполнить заявку на волонтерство, напишите боту - заполнить заявку на волонтерство.
 
+Если Вы хотели бы участвовать в мастер классе, напишите боту - хочу на мастер-класс.''',
+                           reply_markup=keyboard_start_2)
 
 @dp.message_handler(Text(equals='🔙 Назад', ignore_case=True))
 async def back(message: types.Message):
@@ -88,28 +90,28 @@ async def get_contacts(message: types.Message):
     sent_message = await bot.send_message(message.from_user.id, 'Супер', reply_markup=ReplyKeyboardRemove())
     await bot.delete_message(message.chat.id, sent_message.message_id)
     await bot.send_message(message.from_user.id,
-                           f'''Если Вы хотите заполнить заявку на волонтерство, напишите боту - заполнить заявку на волонтерство
+                           f'''Если Вы хотите заполнить заявку на волонтерство, напишите боту - заполнить заявку на волонтерство.
 
-Если Вы хотели бы участвовать в мастер классе, напишите боту - хочу на мастер-класс''',
+Если Вы хотели бы участвовать в мастер классе, напишите боту - хочу на мастер-класс.''',
                            reply_markup=keyboard_start_2)
     printl(message.from_user.id, message.from_user.username, message.from_user.full_name)
 
 
 @dp.message_handler(Text(equals='Соцсети проекта', ignore_case=True))
 async def get_contacts(message: types.Message):
-    await bot.send_message(message.from_user.id, f'''Познакомиться с проектом «Синергия Добра »🫶🏻🇷🇺
+    await bot.send_message(message.from_user.id, f'''Познакомиться с проектом «<b>Синергия Добра</b>»🫶🏻🇷🇺
 
 Сайт: https://sinergidobra.ru/
 
-Телеграм-канал проекта «Синергия Добра»: https://t.me/sinergidobra''', )
+Телеграм-канал проекта «<b>Синергия Добра</b>»: https://t.me/sinergidobra''', parse_mode=types.ParseMode.HTML,)
 
 
 @dp.message_handler(Text(equals='Служба заботы', ignore_case=True))
 async def get_contact(message: types.Message):
     await bot.send_message(message.from_user.id,
-                           '''Если у Вас возникли вопросы, напишите, пожалуйста, администратору''')
+                           '''Если у Вас возникли вопросы, напишите, пожалуйста, администратору.''')
     await bot.send_message(message.from_user.id,
-                           f'@darezeda')
+                           f'@synergidobra')
 
 
 @dp.callback_query_handler(lambda c: c.data.startswith(''))
@@ -171,13 +173,13 @@ async def process_name(message: types.Message, state: FSMContext):
         return
 
     if not is_valid_name(message.text.lower()):
-        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=ReplyKeyboardRemove())
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=keyboard_cancel)
         await state.set_state(AnketForm.name)
         return
 
     await state.update_data(name=message.text)
     await bot.send_message(message.from_user.id,
-                           f"Какое у Вас красивое имя, {message.text.split()[1]}! Приятно познакомиться!\n"
+                           f"Приятно познакомиться!\n"
                            "Впереди несколько вопросов, они пролетят незаметно. Поехали!")
 
     await bot.send_message(message.from_user.id, "Участвует ли член вашей семьи в СВО?", reply_markup=keyboard_yes_no)
@@ -211,7 +213,7 @@ async def process_svr_participation(message: types.Message, state: FSMContext):
     else:
         await save_data_to_database(state, message)
         await message.answer('''Благодарим за заявку! 🌸
-В таком случае Вы можете поучаствовать в проекте в качестве волонтера. У Вас есть возможность заполнить заявку на волонтера.''')
+В таком случае Вы можете поучаствовать в проекте в качестве волонтера. У Вас есть возможность заполнить заявку на волонтера.''', reply_markup=keyboard_v)
         await state.finish()
 
 
@@ -223,7 +225,7 @@ async def process_svr_phone(message: types.Message, state: FSMContext):
         await main(message)
         return
     if not is_valid_phone(message.text.lower()):
-        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=ReplyKeyboardRemove())
+        await message.answer("Вы ввели некорректные данные. Попробуйте снова.", reply_markup=keyboard_cancel)
         await state.set_state(AnketForm.svr_phone)
         return
     async with state.proxy() as data:
@@ -392,7 +394,7 @@ async def process_name(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['name'] = message.text
 
-    await message.answer(f"Какое у Вас красивое имя, {message.text.split()[1]}! Приятно познакомиться!\n"
+    await message.answer(f"Приятно познакомиться!\n"
                          "Впереди всего 10 вопросов, они пролетят незаметно. Поехали!")
 
     await message.answer("Напишите Ваш номер телефона для связи (формат: +79030000009).",

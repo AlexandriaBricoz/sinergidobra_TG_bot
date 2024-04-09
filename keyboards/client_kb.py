@@ -17,6 +17,13 @@ button1_next = KeyboardButton(text="Продолжить")
 # Добавляем кнопки на клавиатуру в виде списка
 keyboard_next.add(button1_next)
 
+keyboard_v = InlineKeyboardMarkup()
+
+button_v = InlineKeyboardButton(text="Заполнить заявку на волонтерство",
+                                callback_data="Заполнить заявку на волонтерство")
+# Добавляем кнопки на клавиатуру в виде списка
+keyboard_v.add(button_v)
+
 keyboard_start_2 = InlineKeyboardMarkup()
 
 button2_start_2 = InlineKeyboardButton(text="Хочу на мастер-класс", callback_data="Хочу на мастер-класс")
