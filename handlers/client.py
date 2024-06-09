@@ -58,7 +58,9 @@ async def start_bot(message: types.Message):
     await bot.send_message(message.from_user.id,
                            f'''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут. ''',
                            parse_mode=types.ParseMode.HTML,
-                           reply_markup=keyboard_next) #ReplyKeyboardRemove
+                           reply_markup=keyboard_next)  # ReplyKeyboardRemove
+
+
 #     await bot.send_message(message.from_user.id,
 #                            f'''Пожалуйста, ознакомьтесь с нашими правилами использования перед тем, как продолжить:
 # https://sinergidobra.ru/privacy
@@ -71,14 +73,16 @@ async def start_bot(message: types.Message):
 @dp.message_handler(Text(equals='🔝 Главное Меню', ignore_case=True))
 async def main(message: types.Message):
     photo = open('photo_2024-03-23 20.04.59.jpeg', 'rb')
-    await bot.send_photo(message.from_user.id, photo=photo, caption='''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут. ''',
-                           parse_mode=types.ParseMode.HTML,
-                           reply_markup=ReplyKeyboardRemove())
+    await bot.send_photo(message.from_user.id, photo=photo,
+                         caption='''Я виртуальный помощник <b>Синергии добра</b>! Чтобы добавить Вас в наше сообщество, задам несколько вопросов, это займет у вас не более 5 минут. ''',
+                         parse_mode=types.ParseMode.HTML,
+                         reply_markup=ReplyKeyboardRemove())
     await bot.send_message(message.from_user.id,
                            f'''Если Вы хотите заполнить заявку на волонтерство, напишите боту - заполнить заявку на волонтерство.
 
 Если Вы хотели бы участвовать в мастер классе, напишите боту - хочу на мастер-класс.''',
                            reply_markup=keyboard_start_2)
+
 
 @dp.message_handler(Text(equals='🔙 Назад', ignore_case=True))
 async def back(message: types.Message):
@@ -103,7 +107,7 @@ async def get_contacts(message: types.Message):
 
 Сайт: https://sinergidobra.ru/
 
-Телеграм-канал проекта «<b>Синергия Добра</b>»: https://t.me/sinergidobra''', parse_mode=types.ParseMode.HTML,)
+Телеграм-канал проекта «<b>Синергия Добра</b>»: https://t.me/sinergidobra''', parse_mode=types.ParseMode.HTML, )
 
 
 @dp.message_handler(Text(equals='Служба заботы', ignore_case=True))
@@ -131,7 +135,8 @@ class AnketForm(StatesGroup):
     svr_participation = State()
     svr_phone = State()
     svr_email = State()
-    svr_telegram = State()
+    svr_date_born = State()
+    svr_address = State()
     svr_social = State()
     children = State()
     children_number = State()
@@ -161,7 +166,8 @@ async def process_name(message: types.Message, state: FSMContext):
             'svr_participation': None,
             'svr_phone': None,
             'svr_email': None,
-            'svr_telegram': None,
+            'svr_date_born': None,
+            'svr_address': None,
             'svr_social': None,
             'children': None,
             'children_number': None,
@@ -213,7 +219,8 @@ async def process_svr_participation(message: types.Message, state: FSMContext):
     else:
         await save_data_to_database(state, message)
         await message.answer('''Благодарим за заявку! 🌸
-В таком случае Вы можете поучаствовать в проекте в качестве волонтера. У Вас есть возможность заполнить заявку на волонтера.''', reply_markup=keyboard_v)
+В таком случае Вы можете поучаствовать в проекте в качестве волонтера. У Вас есть возможность заполнить заявку на волонтера.''',
+                             reply_markup=keyboard_v)
         await state.finish()
 
 
@@ -250,21 +257,35 @@ async def process_svr_email(message: types.Message, state: FSMContext):
     async with state.proxy() as data:
         data['svr_email'] = message.text
     await state.update_data(svr_email=message.text)
-    await bot.send_message(message.from_user.id, "Теперь просим вписать Ваш ник в телеграм.",
+    await bot.send_message(message.from_user.id, "Теперь просим вписать Ваш город проживания.",
                            reply_markup=keyboard_cancel)
-    await AnketForm.svr_telegram.set()
+    await AnketForm.svr_address.set()
 
 
 # Asking for SVR telegram
-@dp.message_handler(state=AnketForm.svr_telegram)
+@dp.message_handler(state=AnketForm.svr_address)
 async def process_svr_telegram(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
     async with state.proxy() as data:
-        data['svr_telegram'] = message.text
-    await state.update_data(svr_telegram=message.text)
+        data['svr_address'] = message.text
+    await state.update_data(svr_address=message.text)
+    await bot.send_message(message.from_user.id, "Дата рождения.",
+                           reply_markup=keyboard_cancel)
+    await AnketForm.svr_date_born.set()
+
+
+@dp.message_handler(state=AnketForm.svr_date_born)
+async def process_svr_email(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['svr_date_born'] = message.text
+    await state.update_data(svr_date_born=message.text)
     await bot.send_message(message.from_user.id, "По желанию вы можете поделиться ссылками на Ваши соцсети (вк, сайт).",
                            reply_markup=keyboard_cancel)
     await AnketForm.svr_social.set()
@@ -323,7 +344,8 @@ async def process_children_number(message: types.Message, state: FSMContext):
         data['children_number'] = message.text
 
     await state.update_data(children_number=message.text)
-    await message.answer("Возраст детей?(последовательно через запятую)")
+    await message.answer(
+        "Дата рождения детей (пример: ребенок 1: 01.02.2009, ребенок 2: 05.06.2017 последовательно через запятую)")
     await AnketForm.children_age.set()
 
 
@@ -614,11 +636,12 @@ async def save_data_to_database(state: FSMContext, message):
     async with state.proxy() as data:
         conn = sqlite3.connect('my_db_path.db')
         cursor = conn.cursor()
-        cursor.execute('''INSERT INTO answers (user_id, nik_name, full_name, name, svr_participation, svr_phone, svr_email, svr_telegram, 
-                           svr_social, children, children_number, children_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+        cursor.execute('''INSERT INTO answers (user_id, nik_name, full_name, name, svr_participation, svr_phone, svr_email, svr_address,  svr_date_born,
+                           svr_social, children, children_number, children_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (message.from_user.id, message.from_user.username, message.from_user.full_name, data['name'],
                         data['svr_participation'], data['svr_phone'], data['svr_email'],
-                        data['svr_telegram'], data['svr_social'], data['children'], data['children_number'],
+                        data['svr_address'], data['svr_date_born'], data['svr_social'], data['children'],
+                        data['children_number'],
                         data['children_age']))
         conn.commit()
         conn.close()

@@ -18,7 +18,8 @@ class Orders:
             svr_participation TEXT,
             svr_phone TEXT,
             svr_email TEXT,
-            svr_telegram TEXT,
+            svr_date_born TEXT,
+            svr_address TEXT,
             svr_social TEXT,
             children TEXT,
             children_number TEXT,
@@ -64,4 +65,4 @@ class Orders2:
         return self.cursor.fetchall()
 
 
-Orders2()
+Orders()
