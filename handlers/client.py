@@ -141,6 +141,7 @@ class AnketForm(StatesGroup):
     children = State()
     children_number = State()
     children_age = State()
+    about = State()
 
 
 @dp.message_handler(Text(equals='Хочу на мастер-класс', ignore_case=True))
@@ -171,7 +172,8 @@ async def process_name(message: types.Message, state: FSMContext):
             'svr_social': None,
             'children': None,
             'children_number': None,
-            'children_age': None
+            'children_age': None,
+            'about': None
         })
     if message.text.lower() == "🚫 отмена":
         await state.finish()
@@ -264,7 +266,7 @@ async def process_svr_email(message: types.Message, state: FSMContext):
 
 # Asking for SVR telegram
 @dp.message_handler(state=AnketForm.svr_address)
-async def process_svr_telegram(message: types.Message, state: FSMContext):
+async def process_svr_address(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
@@ -278,7 +280,7 @@ async def process_svr_telegram(message: types.Message, state: FSMContext):
 
 
 @dp.message_handler(state=AnketForm.svr_date_born)
-async def process_svr_email(message: types.Message, state: FSMContext):
+async def process_svr_date_born(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
@@ -331,6 +333,31 @@ async def process_children(message: types.Message, state: FSMContext):
         await message.answer("Благодарим за заявку! 🌸")
         await state.finish()
 
+@dp.message_handler(state=AnketForm.children)
+async def process_children(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    if message.text.lower() not in ["да", "нет"]:
+        await message.answer("❌ Ответ не из списка.\n\n🔄 Попробуйте еще раз…", reply_markup=keyboard_yes_no)
+        await state.set_state(AnketForm.children)
+        return
+    children = message.text.lower() == 'да'
+
+    async with state.proxy() as data:
+        data['children'] = message.text
+        print(data['children'])
+    await state.update_data(children=children)
+
+    if children:
+        await message.answer("Сколько у вас детей?", reply_markup=keyboard_children_number)
+        await AnketForm.children_number.set()
+    else:
+        await save_data_to_database(state, message)
+        await message.answer("Благодарим за заявку! 🌸")
+        await state.finish()
+
 
 # Asking for children number
 @dp.message_handler(state=AnketForm.children_number)
@@ -348,16 +375,31 @@ async def process_children_number(message: types.Message, state: FSMContext):
         "Дата рождения детей (пример: ребенок 1: 01.02.2009, ребенок 2: 05.06.2017 последовательно через запятую)")
     await AnketForm.children_age.set()
 
-
-# Asking for children age
 @dp.message_handler(state=AnketForm.children_age)
 async def process_children_age(message: types.Message, state: FSMContext):
     if message.text.lower() == "🚫 отмена":
         await state.finish()
         await main(message)
         return
+
     async with state.proxy() as data:
         data['children_age'] = message.text
+
+    await state.update_data(children_number=message.text)
+    await message.answer(
+        """Последний вопрос
+О себе: (Ваша профессия, хобби, увлечения)""")
+    await AnketForm.about.set()
+
+# Asking for children age
+@dp.message_handler(state=AnketForm.about)
+async def process_about(message: types.Message, state: FSMContext):
+    if message.text.lower() == "🚫 отмена":
+        await state.finish()
+        await main(message)
+        return
+    async with state.proxy() as data:
+        data['about'] = message.text
     await state.update_data(children_age=message.text)
     await message.answer("Благодарим за заявку🙏🏻\n"
                          "Будем рады видеть Вас на мероприятии!\n"
@@ -637,12 +679,12 @@ async def save_data_to_database(state: FSMContext, message):
         conn = sqlite3.connect('my_db_path.db')
         cursor = conn.cursor()
         cursor.execute('''INSERT INTO answers (user_id, nik_name, full_name, name, svr_participation, svr_phone, svr_email, svr_address,  svr_date_born,
-                           svr_social, children, children_number, children_age) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
+                           svr_social, children, children_number, children_age, about) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)''',
                        (message.from_user.id, message.from_user.username, message.from_user.full_name, data['name'],
                         data['svr_participation'], data['svr_phone'], data['svr_email'],
                         data['svr_address'], data['svr_date_born'], data['svr_social'], data['children'],
                         data['children_number'],
-                        data['children_age']))
+                        data['children_age'], data['about']))
         conn.commit()
         conn.close()
 

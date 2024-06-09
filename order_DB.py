@@ -23,7 +23,8 @@ class Orders:
             svr_social TEXT,
             children TEXT,
             children_number TEXT,
-            children_age TEXT
+            children_age TEXT,
+            about TEXT
         )
         ''')
         self.connection.commit()
